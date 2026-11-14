@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Talking Santa</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { margin: 0; height: 100%; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; overflow: hidden; }
+  body { background: linear-gradient(#1b3a6b, #7fb2e5 70%, #ffffff 70%); display: flex; flex-direction: column; align-items: center; }
+  #top { width: 100%; display: flex; justify-content: space-between; padding: 12px 16px; font-size: 22px; color: white; }
+  #stage { position: relative; flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
+  #santa { font-size: 180px; transition: transform 0.15s; position: relative; line-height: 1; }
+  #santa.bounce { transform: scale(1.15) rotate(-6deg); }
+  #hat { position: absolute; top: -50px; left: 50%; transform: translateX(-50%); font-size: 70px; }
+  #speech { position: absolute; top: 8%; background: white; border-radius: 20px; padding: 10px 18px; font-size: 22px; max-width: 80%; text-align: center; display: none; }
+  #bar { width: 100%; display: flex; justify-content: space-around; padding: 14px 8px 26px; background: #c62828; }
+  .btn { width: 76px; height: 76px; border-radius: 50%; border: 4px solid white; background: #ef5350; font-size: 36px; color: white; box-shadow: 0 4px 0 #8e0000; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8e0000; }
+  .btn.rec { background: #43a047; animation: pulse 0.6s infinite alternate; }
+  @keyframes pulse { to { transform: scale(1.12); } }
+  #game { position: fixed; inset: 0; background: linear-gradient(#0d2b52, #3b78b8); display: none; z-index: 10; }
+  #gameTop { display: flex; justify-content: space-between; padding: 14px 18px; color: white; font-size: 24px; }
+  .gift { position: absolute; font-size: 64px; }
+  #closeGame { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); }
+  #shop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 20; align-items: center; justify-content: center; }
+  #shopBox { background: white; border-radius: 24px; padding: 20px; width: 85%; max-width: 380px; text-align: center; }
+  .hatBtn { font-size: 44px; margin: 6px; padding: 8px 14px; border-radius: 16px; border: 3px solid #c62828; background: #fff; }
+  .hatBtn small { display: block; font-size: 14px; }
+  .hint { position: absolute; bottom: 4px; width: 100%; text-align: center; color: #333; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div id="top"><div>🪙 <span id="coins">0</span></div><div>❤️ <span id="happy">5</span></div></div>
+
+<div id="stage">
+  <div id="speech"></div>
+  <div id="santa">🎅<div id="hat"></div></div>
+  <div class="hint">Tap or tickle Santa. Hold the mic and talk!</div>
+</div>
+
+<div id="bar">
+  <button class="btn" id="cookieBtn">🍪</button>
+  <button class="btn" id="micBtn">🎤</button>
+  <button class="btn" id="giftBtn">🎁</button>
+  <button class="btn" id="shopBtn">🎩</button>
+</div>
+
+<div id="game">
+  <div id="gameTop"><div>Score: <span id="score">0</span></div><div>⏱ <span id="timer">30</span></div></div>
+  <button class="btn" id="closeGame">✖</button>
+</div>
+
+<div id="shop">
+  <div id="shopBox">
+    <h2>Santa's Hat Shop</h2>
+    <div id="hatList"></div>
+    <button class="btn" id="closeShop" style="margin-top:12px">✖</button>
+  </div>
+</div>
+
+<script>
+// ---------- Saved data ----------
+let save = JSON.parse(localStorage.getItem('santaSave') || '{"coins":0,"owned":[""],"hat":""}');
+let happy = 5;
+function store() { localStorage.setItem('santaSave', JSON.stringify(save)); }
+function refresh() {
+  document.getElementById('coins').textContent = save.coins;
+  document.getElementById('happy').textContent = happy;
+  document.getElementById('hat').textContent = save.hat;
+}
+refresh();
+
+// ---------- Santa sounds and talking ----------
+const santa = document.getElementById('santa');
+const speech = document.getElementById('speech');
+function say(text, pitch = 1.8, rate = 1.1) {
+  speech.textContent = text;
+  speech.style.display = 'block';
+  setTimeout(() => speech.style.display = 'none', 2500);
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.pitch = pitch; u.rate = rate;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+}
+function bounce() {
+  santa.classList.add('bounce');
+  setTimeout(() => santa.classList.remove('bounce'), 150);
+}
+function giggle() {
+  const lines = ['Ho ho ho!', 'Hee hee hee!', 'That tickles!', 'Merry Christmas!', 'Ho ho, again!'];
+  say(lines[Math.floor(Math.random() * lines.length)], 1.3, 1);
+}
+
+santa.addEventListener('click', () => { bounce(); giggle(); });
+let lastTickle = 0;
+santa.addEventListener('touchmove', () => {
+  const now = Date.now();
+  if (now - lastTickle > 1200) { lastTickle = now; bounce(); say('Hahaha! Stop it, that tickles!', 1.6, 1.2); }
+});
+
+// ---------- Cookies ----------
+document.getElementById('cookieBtn').addEventListener('click', () => {
+  happy = Math.min(10, happy + 1);
+  refresh(); bounce();
+  say('Yum yum! Thank you for the cookie!', 1.4, 1);
+});
+
+// ---------- Mic: repeat what the child says ----------
+const micBtn = document.getElementById('micBtn');
+const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null;
+if (Rec) {
+  recog = new Rec();
+  recog.lang = 'en-US';
+  recog.interimResults = false;
+  recog.onresult = e => {
+    const text = e.results[0][0].transcript;
+    say(text, 2, 1.2);
+  };
+  recog.onend = () => micBtn.classList.remove('rec');
+}
+function startMic(e) {
+  e.preventDefault();
+  if (!recog) { say('Sorry, my ears do not work in this browser. Try Chrome!'); return; }
+  micBtn.classList.add('rec');
+  try { recog.start(); } catch (err) {}
+}
+function stopMic(e) {
+  e.preventDefault();
+  if (recog) { try { recog.stop(); } catch (err) {} }
+}
+micBtn.addEventListener('touchstart', startMic);
+micBtn.addEventListener('touchend', stopMic);
+micBtn.addEventListener('mousedown', startMic);
+micBtn.addEventListener('mouseup', stopMic);
+
+// ---------- Hat shop ----------
+const hats = [
+  { icon: '', name: 'None', cost: 0 },
+  { icon: '👑', name: 'Crown', cost: 10 },
+  { icon: '🎩', name: 'Top hat', cost: 15 },
+  { icon: '🎓', name: 'Graduate', cost: 20 },
+  { icon: '🧢', name: 'Cap', cost: 25 },
+  { icon: '⛑️', name: 'Helper', cost: 30 }
+];
+const shop = document.getElementById('shop');
+function drawShop() {
+  const list = document.getElementById('hatList');
+  list.innerHTML = '';
+  hats.forEach(h => {
+    const b = document.createElement('button');
+    b.className = 'hatBtn';
+    const owned = save.owned.includes(h.icon);
+    b.innerHTML = (h.icon || '🚫') + '<small>' + (owned ? 'Wear' : '🪙 ' + h.cost) + '</small>';
+    b.onclick = () => {
+      if (owned) { save.hat = h.icon; }
+      else if (save.coins >= h.cost) { save.coins -= h.cost; save.owned.push(h.icon); save.hat = h.icon; say('Ooh, a new hat!'); }
+      else { say('You need more coins! Wrap some gifts!'); }
+      store(); refresh(); drawShop();
+    };
+    list.appendChild(b);
+  });
+}
+document.getElementById('shopBtn').onclick = () => { drawShop(); shop.style.display = 'flex'; };
+document.getElementById('closeShop').onclick = () => shop.style.display = 'none';
+
+// ---------- Gift game ----------
+const game = document.getElementById('game');
+let score = 0, timeLeft = 30, spawner, ticker, running = false;
+const giftIcons = ['🎁', '🎀', '🧸', '⭐'];
+function spawnGift() {
+  const g = document.createElement('div');
+  g.className = 'gift';
+  g.textContent = giftIcons[Math.floor(Math.random() * giftIcons.length)];
+  g.style.left = Math.random() * (window.innerWidth - 80) + 'px';
+  g.style.top = '60px';
+  game.appendChild(g);
+  let y = 60;
+  const speed = 2 + Math.random() * 2.5;
+  const fall = setInterval(() => {
+    y += speed;
+    g.style.top = y + 'px';
+    if (y > window.innerHeight) { clearInterval(fall); g.remove(); }
+  }, 16);
+  const pop = () => {
+    if (!running) return;
+    score++;
+    document.getElementById('score').textContent = score;
+    g.textContent = '✨';
+    clearInterval(fall);
+    setTimeout(() => g.remove(), 200);
+  };
+  g.addEventListener('touchstart', e => { e.preventDefault(); pop(); });
+  g.addEventListener('mousedown', pop);
+}
+function startGame() {
+  score = 0; timeLeft = 30; running = true;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('timer').textContent = 30;
+  game.style.display = 'block';
+  spawner = setInterval(spawnGift, 600);
+  ticker = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timer').textContent = timeLeft;
+    if (timeLeft <= 0) endGame(true);
+  }, 1000);
+}
+function endGame(finished) {
+  running = false;
+  clearInterval(spawner); clearInterval(ticker);
+  game.querySelectorAll('.gift').forEach(g => g.remove());
+  game.style.display = 'none';
+  if (finished) {
+    save.coins += score; store(); refresh();
+    say('You wrapped ' + score + ' presents! Ho ho ho!', 1.4, 1);
+  }
+}
+document.getElementById('giftBtn').onclick = startGame;
+document.getElementById('closeGame').onclick = () => endGame(false);
+
+// ---------- Hello ----------
+setTimeout(() => say('Ho ho ho! Hello my friend!', 1.3, 1), 600);
+</script>
+</body>
+</html>
