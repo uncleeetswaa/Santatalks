@@ -7,44 +7,148 @@
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body { margin: 0; height: 100%; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; overflow: hidden; }
-  body { background: linear-gradient(#1b3a6b, #7fb2e5 70%, #ffffff 70%); display: flex; flex-direction: column; align-items: center; }
-  #top { width: 100%; display: flex; justify-content: space-between; padding: 12px 16px; font-size: 22px; color: white; }
+  body { background: linear-gradient(#10264a 0%, #2d5f9a 55%, #cfe6f7 55%, #ffffff 100%); display: flex; flex-direction: column; align-items: center; }
+  #top { width: 100%; display: flex; justify-content: space-between; padding: 12px 16px; font-size: 22px; color: white; z-index: 3; }
   #stage { position: relative; flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
-  #santa { font-size: 180px; transition: transform 0.15s; position: relative; line-height: 1; }
-  #santa.bounce { transform: scale(1.15) rotate(-6deg); }
-  #hat { position: absolute; top: -50px; left: 50%; transform: translateX(-50%); font-size: 70px; }
-  #speech { position: absolute; top: 8%; background: white; border-radius: 20px; padding: 10px 18px; font-size: 22px; max-width: 80%; text-align: center; display: none; }
-  #bar { width: 100%; display: flex; justify-content: space-around; padding: 14px 8px 26px; background: #c62828; }
+  #santaSvg { width: min(92vw, 52vh); height: auto; touch-action: none; filter: drop-shadow(0 12px 10px rgba(0,0,0,0.25)); transition: transform 0.15s; }
+  #santaSvg.bounce { transform: scale(1.06) rotate(-2deg); }
+  #speech { position: absolute; top: 4%; background: white; border-radius: 22px; padding: 10px 18px; font-size: 22px; max-width: 82%; text-align: center; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 3; }
+  #status { position: absolute; bottom: 6px; width: 100%; text-align: center; color: #234; font-size: 15px; }
+  #bar { width: 100%; display: flex; justify-content: space-around; padding: 14px 8px 26px; background: #c62828; z-index: 3; }
   .btn { width: 76px; height: 76px; border-radius: 50%; border: 4px solid white; background: #ef5350; font-size: 36px; color: white; box-shadow: 0 4px 0 #8e0000; }
   .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8e0000; }
-  .btn.rec { background: #43a047; animation: pulse 0.6s infinite alternate; }
-  @keyframes pulse { to { transform: scale(1.12); } }
+  .btn.on { background: #43a047; animation: pulse 0.8s infinite alternate; }
+  @keyframes pulse { to { transform: scale(1.1); } }
   #game { position: fixed; inset: 0; background: linear-gradient(#0d2b52, #3b78b8); display: none; z-index: 10; }
   #gameTop { display: flex; justify-content: space-between; padding: 14px 18px; color: white; font-size: 24px; }
   .gift { position: absolute; font-size: 64px; }
   #closeGame { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); }
   #shop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 20; align-items: center; justify-content: center; }
   #shopBox { background: white; border-radius: 24px; padding: 20px; width: 85%; max-width: 380px; text-align: center; }
-  .hatBtn { font-size: 44px; margin: 6px; padding: 8px 14px; border-radius: 16px; border: 3px solid #c62828; background: #fff; }
+  .hatBtn { font-size: 40px; margin: 6px; padding: 8px 14px; border-radius: 16px; border: 3px solid #c62828; background: #fff; }
   .hatBtn small { display: block; font-size: 14px; }
-  .hint { position: absolute; bottom: 4px; width: 100%; text-align: center; color: #333; font-size: 14px; }
+  #start { position: fixed; inset: 0; z-index: 30; background: linear-gradient(#10264a, #2d5f9a); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
+  #start h1 { font-size: 40px; margin: 0 0 8px; }
+  #start p { font-size: 20px; margin: 0 0 24px; }
+  #startBtn { font-size: 30px; padding: 18px 40px; border-radius: 40px; border: 4px solid white; background: #c62828; color: white; box-shadow: 0 6px 0 #7a0000; }
+  .snow { position: fixed; top: -20px; color: white; pointer-events: none; z-index: 1; animation: fall linear infinite; }
+  @keyframes fall { to { transform: translateY(110vh); } }
 </style>
 </head>
 <body>
+
+<div id="start">
+  <h1>Talking Santa</h1>
+  <p>Tap the button, then just talk to Santa!</p>
+  <button id="startBtn">Say Hello</button>
+</div>
 
 <div id="top"><div>🪙 <span id="coins">0</span></div><div>❤️ <span id="happy">5</span></div></div>
 
 <div id="stage">
   <div id="speech"></div>
-  <div id="santa">🎅<div id="hat"></div></div>
-  <div class="hint">Tap or tickle Santa. Hold the mic and talk!</div>
+
+  <svg id="santaSvg" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="skin" cx="50%" cy="45%" r="60%">
+        <stop offset="0%" stop-color="#ffd9bd"/><stop offset="100%" stop-color="#f2a98a"/>
+      </radialGradient>
+      <linearGradient id="suit" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#e53935"/><stop offset="100%" stop-color="#a31515"/>
+      </linearGradient>
+      <linearGradient id="hatg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ef5350"/><stop offset="100%" stop-color="#b71c1c"/>
+      </linearGradient>
+      <radialGradient id="fur" cx="50%" cy="40%" r="70%">
+        <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#dfe8f2"/>
+      </radialGradient>
+      <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ff8a80" stop-opacity="0.8"/><stop offset="100%" stop-color="#ff8a80" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- body -->
+    <path d="M60 520 Q70 330 200 310 Q330 330 340 520 Z" fill="url(#suit)"/>
+    <rect x="60" y="440" width="280" height="34" fill="#2b2b2b"/>
+    <rect x="170" y="436" width="60" height="42" rx="6" fill="#ffca28" stroke="#c79100" stroke-width="4"/>
+    <rect x="184" y="448" width="32" height="18" rx="3" fill="#2b2b2b"/>
+    <path d="M150 520 Q200 340 250 520" fill="url(#fur)" opacity="0.9"/>
+    <circle cx="200" cy="400" r="7" fill="#fff3"/>
+    <!-- arms -->
+    <g id="armL" style="transform-origin: 90px 380px;">
+      <path d="M90 350 Q40 400 70 470 L110 450 Q100 400 120 360 Z" fill="url(#suit)"/>
+      <ellipse cx="85" cy="470" rx="30" ry="22" fill="url(#fur)"/>
+      <circle cx="85" cy="490" r="22" fill="#2b2b2b"/>
+    </g>
+    <g id="armR" style="transform-origin: 310px 380px;">
+      <path d="M310 350 Q360 400 330 470 L290 450 Q300 400 280 360 Z" fill="url(#suit)"/>
+      <ellipse cx="315" cy="470" rx="30" ry="22" fill="url(#fur)"/>
+      <circle cx="315" cy="490" r="22" fill="#2b2b2b"/>
+    </g>
+
+    <!-- beard -->
+    <g id="beard" style="transform-origin: 200px 230px;">
+      <path d="M85 215 Q70 330 130 385 Q165 420 200 425 Q235 420 270 385 Q330 330 315 215 Q290 270 200 270 Q110 270 85 215 Z" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
+      <path d="M130 330 Q150 360 175 350 M225 350 Q250 360 270 330 M170 385 Q200 405 230 385" stroke="#c9d6e4" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- head -->
+    <ellipse cx="200" cy="190" rx="100" ry="92" fill="url(#skin)"/>
+    <ellipse cx="120" cy="205" rx="20" ry="26" fill="#f2a98a"/>
+    <ellipse cx="280" cy="205" rx="20" ry="26" fill="#f2a98a"/>
+    <ellipse cx="140" cy="215" rx="26" ry="18" fill="url(#cheek)"/>
+    <ellipse cx="260" cy="215" rx="26" ry="18" fill="url(#cheek)"/>
+
+    <!-- eyebrows -->
+    <g id="brows">
+      <path d="M130 150 Q155 130 180 148 Q155 140 130 150 Z" fill="#fff" stroke="#dfe8f2" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M220 148 Q245 130 270 150 Q245 140 220 148 Z" fill="#fff" stroke="#dfe8f2" stroke-width="6" stroke-linejoin="round"/>
+    </g>
+
+    <!-- eyes -->
+    <g id="eyes" style="transform-origin: 200px 175px;">
+      <ellipse cx="155" cy="175" rx="20" ry="22" fill="#fff"/>
+      <ellipse cx="245" cy="175" rx="20" ry="22" fill="#fff"/>
+      <g id="pupils">
+        <circle cx="158" cy="178" r="13" fill="#2c6fb0"/><circle cx="158" cy="178" r="7" fill="#0b1e33"/><circle cx="163" cy="172" r="4" fill="#fff"/>
+        <circle cx="242" cy="178" r="13" fill="#2c6fb0"/><circle cx="242" cy="178" r="7" fill="#0b1e33"/><circle cx="247" cy="172" r="4" fill="#fff"/>
+      </g>
+    </g>
+
+    <!-- nose -->
+    <ellipse cx="200" cy="212" rx="20" ry="17" fill="#f08a6c"/>
+    <ellipse cx="194" cy="206" rx="7" ry="5" fill="#ffc4b0"/>
+
+    <!-- moustache -->
+    <path d="M90 245 Q130 205 200 240 Q270 205 310 245 Q290 290 235 268 Q200 258 165 268 Q110 290 90 245 Z" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
+
+    <!-- mouth -->
+    <g id="mouthG" style="transform-origin: 200px 285px;">
+      <ellipse id="mouth" cx="200" cy="288" rx="26" ry="6" fill="#7a1f2b"/>
+      <ellipse id="tongue" cx="200" cy="294" rx="14" ry="3" fill="#ef7a85" opacity="0"/>
+    </g>
+
+    <!-- hat -->
+    <g id="hatG">
+      <path d="M95 130 Q110 20 215 22 Q300 24 310 130 Q200 100 95 130 Z" fill="url(#hatg)"/>
+      <path d="M215 22 Q300 20 330 90 Q320 60 290 55 Q260 30 215 22 Z" fill="#a31515"/>
+      <circle cx="330" cy="92" r="26" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
+      <path d="M80 140 Q200 95 320 140 Q330 168 300 170 Q200 135 100 170 Q70 168 80 140 Z" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
+    </g>
+
+    <!-- extra hat from the shop -->
+    <text id="extraHat" x="200" y="60" font-size="80" text-anchor="middle"></text>
+  </svg>
+
+  <div id="status">Waking up...</div>
 </div>
 
 <div id="bar">
   <button class="btn" id="cookieBtn">🍪</button>
-  <button class="btn" id="micBtn">🎤</button>
+  <button class="btn on" id="micBtn">🎤</button>
   <button class="btn" id="giftBtn">🎁</button>
   <button class="btn" id="shopBtn">🎩</button>
+  <button class="btn on" id="musicBtn">🎵</button>
 </div>
 
 <div id="game">
@@ -68,75 +172,244 @@ function store() { localStorage.setItem('santaSave', JSON.stringify(save)); }
 function refresh() {
   document.getElementById('coins').textContent = save.coins;
   document.getElementById('happy').textContent = happy;
-  document.getElementById('hat').textContent = save.hat;
+  document.getElementById('extraHat').textContent = save.hat;
 }
 refresh();
 
-// ---------- Santa sounds and talking ----------
-const santa = document.getElementById('santa');
-const speech = document.getElementById('speech');
-function say(text, pitch = 1.8, rate = 1.1) {
-  speech.textContent = text;
-  speech.style.display = 'block';
-  setTimeout(() => speech.style.display = 'none', 2500);
-  if ('speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance(text);
-    u.pitch = pitch; u.rate = rate;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }
-}
-function bounce() {
-  santa.classList.add('bounce');
-  setTimeout(() => santa.classList.remove('bounce'), 150);
-}
-function giggle() {
-  const lines = ['Ho ho ho!', 'Hee hee hee!', 'That tickles!', 'Merry Christmas!', 'Ho ho, again!'];
-  say(lines[Math.floor(Math.random() * lines.length)], 1.3, 1);
+// ---------- Snow ----------
+for (let i = 0; i < 24; i++) {
+  const s = document.createElement('div');
+  s.className = 'snow';
+  s.textContent = '❄';
+  s.style.left = Math.random() * 100 + 'vw';
+  s.style.fontSize = (10 + Math.random() * 16) + 'px';
+  s.style.opacity = 0.4 + Math.random() * 0.5;
+  s.style.animationDuration = (6 + Math.random() * 8) + 's';
+  s.style.animationDelay = (-Math.random() * 10) + 's';
+  document.body.appendChild(s);
 }
 
-santa.addEventListener('click', () => { bounce(); giggle(); });
-let lastTickle = 0;
-santa.addEventListener('touchmove', () => {
-  const now = Date.now();
-  if (now - lastTickle > 1200) { lastTickle = now; bounce(); say('Hahaha! Stop it, that tickles!', 1.6, 1.2); }
+// ---------- Santa animation: blinking, mouth, beard, arms ----------
+const svg = document.getElementById('santaSvg');
+const eyes = document.getElementById('eyes');
+const mouth = document.getElementById('mouth');
+const tongue = document.getElementById('tongue');
+const beard = document.getElementById('beard');
+const pupils = document.getElementById('pupils');
+const armL = document.getElementById('armL');
+const armR = document.getElementById('armR');
+const brows = document.getElementById('brows');
+let talking = false;
+
+// blink every few seconds
+function blink() {
+  eyes.style.transition = 'transform 0.08s';
+  eyes.style.transform = 'scaleY(0.08)';
+  setTimeout(() => { eyes.style.transform = 'scaleY(1)'; }, 110);
+  setTimeout(blink, 2200 + Math.random() * 2800);
+}
+setTimeout(blink, 2000);
+
+// mouth flap while talking, gentle breathing otherwise
+let t = 0;
+function loop() {
+  t += 0.05;
+  const breathe = Math.sin(t) * 3;
+  beard.style.transform = 'translateY(' + breathe * 0.4 + 'px)';
+  armL.style.transform = 'rotate(' + (Math.sin(t * 0.8) * 2) + 'deg)';
+  armR.style.transform = 'rotate(' + (-Math.sin(t * 0.8) * 2) + 'deg)';
+  if (talking) {
+    const open = 6 + Math.abs(Math.sin(t * 9)) * 24 + Math.random() * 4;
+    mouth.setAttribute('ry', open);
+    mouth.setAttribute('rx', 26 - open * 0.15);
+    tongue.setAttribute('opacity', open > 18 ? 0.9 : 0);
+    tongue.setAttribute('cy', 288 + open * 0.55);
+    beard.style.transform = 'translateY(' + (breathe * 0.4 + open * 0.18) + 'px)';
+    brows.style.transform = 'translateY(-4px)';
+  } else {
+    mouth.setAttribute('ry', 6);
+    mouth.setAttribute('rx', 26);
+    tongue.setAttribute('opacity', 0);
+    brows.style.transform = 'translateY(0)';
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+
+// look toward a touch
+svg.addEventListener('touchmove', e => {
+  const r = svg.getBoundingClientRect();
+  const x = (e.touches[0].clientX - r.left) / r.width - 0.5;
+  const y = (e.touches[0].clientY - r.top) / r.height - 0.5;
+  pupils.style.transform = 'translate(' + (x * 10) + 'px,' + (y * 6) + 'px)';
+}, { passive: true });
+
+function bounce() {
+  svg.classList.add('bounce');
+  setTimeout(() => svg.classList.remove('bounce'), 160);
+}
+
+// ---------- Voice: pick the most natural voice available ----------
+let santaVoice = null;
+function pickVoice() {
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return;
+  const english = voices.filter(v => /^en/i.test(v.lang));
+  // prefer neural / enhanced / premium voices, then deep male-sounding names
+  const prefs = [/neural|natural|online/i, /premium|enhanced/i, /google uk english male/i, /daniel|arthur|oliver|fred|alex|aaron|reed|rocko|gordon|james|google us english/i];
+  for (const p of prefs) {
+    const found = english.find(v => p.test(v.name));
+    if (found) { santaVoice = found; return; }
+  }
+  santaVoice = english[0] || voices[0];
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+
+// ---------- Speaking (mic pauses while Santa talks so he never hears himself) ----------
+const speech = document.getElementById('speech');
+const statusEl = document.getElementById('status');
+let speaking = false;
+function say(text, mode) {
+  // mode 'echo' = repeat what the child said in a cheery, slightly higher voice
+  // mode 'santa' = Santa's own lines, warm and slow
+  speech.textContent = text;
+  speech.style.display = 'block';
+  if (!('speechSynthesis' in window)) { setTimeout(() => speech.style.display = 'none', 2500); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  if (santaVoice) u.voice = santaVoice;
+  if (mode === 'echo') { u.pitch = 1.25; u.rate = 1.0; }
+  else { u.pitch = 0.8; u.rate = 0.88; }
+  u.volume = 1;
+  u.onstart = () => { speaking = true; talking = true; statusEl.textContent = 'Santa is talking...'; stopListening(); };
+  u.onend = u.onerror = () => {
+    speaking = false; talking = false;
+    speech.style.display = 'none';
+    statusEl.textContent = 'Santa is listening... say something!';
+    setTimeout(startListening, 350);
+  };
+  speechSynthesis.speak(u);
+}
+function giggle() {
+  const lines = ['Ho ho ho!', 'Hee hee hee, that tickles!', 'Merry Christmas!', 'Ho ho ho, you are a funny one!', 'Oh my jingle bells!'];
+  say(lines[Math.floor(Math.random() * lines.length)], 'santa');
+}
+
+// ---------- Always-listening mic ----------
+const micBtn = document.getElementById('micBtn');
+const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null, wantListening = false, listening = false;
+if (Rec) {
+  recog = new Rec();
+  recog.lang = 'en-US';
+  recog.continuous = false;
+  recog.interimResults = false;
+  recog.onstart = () => { listening = true; micBtn.classList.add('on'); if (!speaking) statusEl.textContent = 'Santa is listening... say something!'; };
+  recog.onresult = e => {
+    const text = e.results[e.results.length - 1][0].transcript.trim();
+    if (text) { happy = Math.min(10, happy); say(text, 'echo'); }
+  };
+  recog.onerror = e => {
+    listening = false;
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      wantListening = false; micBtn.classList.remove('on');
+      statusEl.textContent = 'Please allow the microphone and tap the mic.';
+    }
+  };
+  recog.onend = () => {
+    listening = false;
+    if (wantListening && !speaking) setTimeout(startListening, 250);
+  };
+}
+function startListening() {
+  if (!recog || !wantListening || listening || speaking) return;
+  try { recog.start(); } catch (err) {}
+}
+function stopListening() {
+  if (!recog) return;
+  try { recog.abort(); } catch (err) {}
+  listening = false;
+}
+// mic button now just mutes or unmutes
+micBtn.addEventListener('click', () => {
+  if (!recog) { say('My ears do not work in this browser. Try Chrome!', 'santa'); return; }
+  wantListening = !wantListening;
+  if (wantListening) { micBtn.classList.add('on'); startListening(); }
+  else { micBtn.classList.remove('on'); stopListening(); statusEl.textContent = 'Santa is resting. Tap the mic to wake him.'; }
 });
+
+// ---------- Start screen (phones need a tap before sound and mic) ----------
+// ---------- Christmas music (made in code, no files needed) ----------
+let audioCtx = null, musicOn = true, musicTimer = null, noteIndex = 0;
+const N = { C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88, C5:523.25, D5:587.33, E5:659.25, G5:783.99 };
+// Jingle Bells chorus: [note, beats]
+const tune = [
+  ['E4',1],['E4',1],['E4',2],['E4',1],['E4',1],['E4',2],
+  ['E4',1],['G4',1],['C4',1.5],['D4',0.5],['E4',4],
+  ['F4',1],['F4',1],['F4',1.5],['F4',0.5],['F4',1],['E4',1],['E4',1],['E4',0.5],['E4',0.5],
+  ['E4',1],['D4',1],['D4',1],['E4',1],['D4',2],['G4',2]
+];
+function playNote(freq, dur) {
+  const t0 = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine'; osc.frequency.value = freq;
+  osc2.type = 'triangle'; osc2.frequency.value = freq * 2;
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(0.035, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(t0); osc2.start(t0);
+  osc.stop(t0 + dur + 0.05); osc2.stop(t0 + dur + 0.05);
+}
+function musicStep() {
+  if (!musicOn) return;
+  const [name, beats] = tune[noteIndex];
+  const beatSec = 0.42;
+  // stay quiet while Santa is talking so the child can hear him
+  if (!speaking) playNote(N[name], beats * beatSec * 1.1);
+  noteIndex = (noteIndex + 1) % tune.length;
+  const pause = noteIndex === 0 ? 4000 : 0; // short gap between rounds
+  musicTimer = setTimeout(musicStep, beats * beatSec * 1000 + pause);
+}
+function startMusic() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  clearTimeout(musicTimer);
+  musicStep();
+}
+document.getElementById('musicBtn').addEventListener('click', () => {
+  const b = document.getElementById('musicBtn');
+  musicOn = !musicOn;
+  if (musicOn) { b.classList.add('on'); startMusic(); }
+  else { b.classList.remove('on'); clearTimeout(musicTimer); }
+});
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  startMusic();
+  document.getElementById('start').style.display = 'none';
+  wantListening = true;
+  say('Ho ho ho! Hello, my friend! Talk to me and I will say it back!', 'santa');
+});
+
+// ---------- Tap and tickle ----------
+svg.addEventListener('click', () => { bounce(); giggle(); });
+let lastTickle = 0;
+svg.addEventListener('touchmove', () => {
+  const now = Date.now();
+  if (now - lastTickle > 1500 && !speaking) { lastTickle = now; bounce(); say('Hahaha! Stop it, that tickles!', 'santa'); }
+}, { passive: true });
 
 // ---------- Cookies ----------
 document.getElementById('cookieBtn').addEventListener('click', () => {
   happy = Math.min(10, happy + 1);
   refresh(); bounce();
-  say('Yum yum! Thank you for the cookie!', 1.4, 1);
+  say('Mmm, yum yum! Thank you for the cookie!', 'santa');
 });
-
-// ---------- Mic: repeat what the child says ----------
-const micBtn = document.getElementById('micBtn');
-const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recog = null;
-if (Rec) {
-  recog = new Rec();
-  recog.lang = 'en-US';
-  recog.interimResults = false;
-  recog.onresult = e => {
-    const text = e.results[0][0].transcript;
-    say(text, 2, 1.2);
-  };
-  recog.onend = () => micBtn.classList.remove('rec');
-}
-function startMic(e) {
-  e.preventDefault();
-  if (!recog) { say('Sorry, my ears do not work in this browser. Try Chrome!'); return; }
-  micBtn.classList.add('rec');
-  try { recog.start(); } catch (err) {}
-}
-function stopMic(e) {
-  e.preventDefault();
-  if (recog) { try { recog.stop(); } catch (err) {} }
-}
-micBtn.addEventListener('touchstart', startMic);
-micBtn.addEventListener('touchend', stopMic);
-micBtn.addEventListener('mousedown', startMic);
-micBtn.addEventListener('mouseup', stopMic);
 
 // ---------- Hat shop ----------
 const hats = [
@@ -144,8 +417,8 @@ const hats = [
   { icon: '👑', name: 'Crown', cost: 10 },
   { icon: '🎩', name: 'Top hat', cost: 15 },
   { icon: '🎓', name: 'Graduate', cost: 20 },
-  { icon: '🧢', name: 'Cap', cost: 25 },
-  { icon: '⛑️', name: 'Helper', cost: 30 }
+  { icon: '🕶️', name: 'Shades', cost: 25 },
+  { icon: '🦌', name: 'Antlers', cost: 30 }
 ];
 const shop = document.getElementById('shop');
 function drawShop() {
@@ -158,8 +431,8 @@ function drawShop() {
     b.innerHTML = (h.icon || '🚫') + '<small>' + (owned ? 'Wear' : '🪙 ' + h.cost) + '</small>';
     b.onclick = () => {
       if (owned) { save.hat = h.icon; }
-      else if (save.coins >= h.cost) { save.coins -= h.cost; save.owned.push(h.icon); save.hat = h.icon; say('Ooh, a new hat!'); }
-      else { say('You need more coins! Wrap some gifts!'); }
+      else if (save.coins >= h.cost) { save.coins -= h.cost; save.owned.push(h.icon); save.hat = h.icon; say('Ooh, I love it!', 'santa'); }
+      else { say('You need more coins! Wrap some gifts!', 'santa'); }
       store(); refresh(); drawShop();
     };
     list.appendChild(b);
@@ -198,6 +471,7 @@ function spawnGift() {
   g.addEventListener('mousedown', pop);
 }
 function startGame() {
+  stopListening();
   score = 0; timeLeft = 30; running = true;
   document.getElementById('score').textContent = 0;
   document.getElementById('timer').textContent = 30;
@@ -216,14 +490,13 @@ function endGame(finished) {
   game.style.display = 'none';
   if (finished) {
     save.coins += score; store(); refresh();
-    say('You wrapped ' + score + ' presents! Ho ho ho!', 1.4, 1);
+    say('You wrapped ' + score + ' presents! Ho ho ho!', 'santa');
+  } else {
+    setTimeout(startListening, 300);
   }
 }
 document.getElementById('giftBtn').onclick = startGame;
 document.getElementById('closeGame').onclick = () => endGame(false);
-
-// ---------- Hello ----------
-setTimeout(() => say('Ho ho ho! Hello my friend!', 1.3, 1), 600);
 </script>
 </body>
 </html>
