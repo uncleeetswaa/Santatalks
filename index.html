@@ -6,13 +6,13 @@
 <title>Talking Santa 3D</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Chalkboard SE', 'Comic Sans MS', sans-serif; background: #10264a; }
-  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  html, body { margin: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; position: fixed; inset: 0; overscroll-behavior: none; font-family: 'Chalkboard SE', 'Comic Sans MS', sans-serif; background: #10264a; }
+  #scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; display: block; touch-action: none; }
   #top { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; padding: 14px 18px; font-size: 24px; color: white; z-index: 5; text-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none; }
   #speech { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); background: white; border-radius: 24px; padding: 12px 20px; font-size: 22px; max-width: 86%; text-align: center; display: none; box-shadow: 0 6px 16px rgba(0,0,0,0.3); z-index: 6; }
-  #status { position: fixed; bottom: 118px; width: 100%; text-align: center; color: white; font-size: 16px; z-index: 5; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events: none; }
-  #bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 12px 6px 24px; background: linear-gradient(#c62828, #8e1111); z-index: 7; }
-  .btn { width: 66px; height: 66px; border-radius: 50%; border: 4px solid white; background: #ef5350; font-size: 30px; color: white; box-shadow: 0 4px 0 #6d0000; padding: 0; }
+  #status { position: fixed; bottom: 92px; width: 100%; text-align: center; color: white; font-size: 16px; z-index: 5; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events: none; }
+  #bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 6px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(#c62828, #8e1111); z-index: 7; }
+  .btn { width: 54px; height: 54px; border-radius: 50%; border: 3px solid white; background: #ef5350; font-size: 25px; color: white; box-shadow: 0 4px 0 #6d0000; padding: 0; }
   .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #6d0000; }
   .btn.on { background: #43a047; box-shadow: 0 4px 0 #1b5e20; }
   #start { position: fixed; inset: 0; z-index: 30; background: radial-gradient(circle at 50% 30%, #2d5f9a, #10264a); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
@@ -88,18 +88,18 @@ renderer.toneMappingExposure = 1.15;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x10264a);
-scene.fog = new THREE.Fog(0x10264a, 9, 22);
+scene.fog = new THREE.Fog(0x10264a, 12, 28);
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 60);
-camera.position.set(0, 1.55, 6.4);
-camera.lookAt(0, 1.35, 0);
+camera.position.set(0, 1.9, 8.4);
+camera.lookAt(0, 1.75, 0);
 
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  // on tall phone screens, pull the camera back a bit so Santa always fits
-  camera.position.z = w / h < 0.7 ? 7.6 : 6.4;
+  // keep the whole Santa on screen: pull the camera back on tall phone screens
+  camera.position.z = w / h < 0.7 ? 10.2 : 8.4;
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
@@ -188,6 +188,141 @@ for (let i = 0; i < 26; i++) {
 tree.position.set(3.1, 0, -2.6);
 tree.scale.setScalar(0.95);
 scene.add(tree);
+
+// ---------- Presents under the tree ----------
+const giftColors = [0xe53935, 0x1e88e5, 0xfdd835, 0x43a047, 0x8e24aa, 0xfb8c00];
+function makeGift(w, h, d, color, ribbon, x, z, rotY) {
+  const g = new THREE.Group();
+  const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: 0.5 }));
+  box.position.y = h / 2; box.castShadow = true; box.receiveShadow = true;
+  const rMat = new THREE.MeshStandardMaterial({ color: ribbon, roughness: 0.3, metalness: 0.2 });
+  const r1 = new THREE.Mesh(new THREE.BoxGeometry(w + 0.02, h + 0.02, d * 0.18), rMat); r1.position.y = h / 2;
+  const r2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.18, h + 0.02, d + 0.02), rMat); r2.position.y = h / 2;
+  const bow1 = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.035, 8, 16), rMat); bow1.position.set(-0.08, h + 0.06, 0); bow1.rotation.y = Math.PI / 2;
+  const bow2 = bow1.clone(); bow2.position.x = 0.08;
+  g.add(box, r1, r2, bow1, bow2);
+  g.position.set(x, 0, z); g.rotation.y = rotY;
+  return g;
+}
+scene.add(makeGift(0.7, 0.6, 0.7, giftColors[0], 0xffffff, 2.2, -1.2, 0.3));
+scene.add(makeGift(0.5, 0.45, 0.5, giftColors[1], 0xfdd835, 3.1, -0.7, -0.4));
+scene.add(makeGift(0.9, 0.4, 0.6, giftColors[2], 0xe53935, 4.0, -1.4, 0.15));
+scene.add(makeGift(0.45, 0.8, 0.45, giftColors[3], 0xffffff, 1.7, -2.0, -0.2));
+scene.add(makeGift(0.6, 0.5, 0.6, giftColors[4], 0xfdd835, 4.3, -0.6, 0.5));
+scene.add(makeGift(0.5, 0.5, 0.5, giftColors[5], 0xffffff, 2.7, -1.8, 0.6));
+
+// ---------- Reindeer (cute round ones that look around and wiggle) ----------
+const reindeer = [];
+function makeReindeer(x, z, scale, noseRed) {
+  const r = new THREE.Group();
+  const fur = new THREE.MeshStandardMaterial({ color: 0xa8683a, roughness: 0.9 });
+  const light = new THREE.MeshStandardMaterial({ color: 0xe8cfa8, roughness: 0.9 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 24, 18), fur);
+  body.scale.set(1.3, 0.9, 0.9); body.position.y = 0.95; body.castShadow = true;
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 16), light);
+  chest.position.set(0.5, 0.9, 0); chest.scale.set(0.9, 1, 0.9);
+  const headG = new THREE.Group(); headG.position.set(0.85, 1.55, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 18), fur); head.scale.set(1.1, 1, 0.95); head.castShadow = true;
+  const snout = new THREE.Mesh(new THREE.SphereGeometry(0.19, 18, 14), light); snout.position.set(0.28, -0.1, 0);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 12),
+    new THREE.MeshStandardMaterial({ color: noseRed ? 0xff1111 : 0x2b1a12, emissive: noseRed ? 0xff0000 : 0x000000, emissiveIntensity: noseRed ? 1.6 : 0, roughness: 0.3 }));
+  nose.position.set(0.44, -0.06, 0);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+  const eyeA = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), eyeMat); eyeA.position.set(0.22, 0.1, 0.17);
+  const eyeB = eyeA.clone(); eyeB.position.z = -0.17;
+  headG.add(head, snout, nose, eyeA, eyeB);
+  // antlers
+  const antMat = new THREE.MeshStandardMaterial({ color: 0x5a3b22, roughness: 0.8 });
+  for (const s of [-1, 1]) {
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.45, 8), antMat);
+    stem.position.set(-0.05, 0.4, s * 0.16); stem.rotation.x = s * 0.35;
+    const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.028, 0.28, 8), antMat);
+    b1.position.set(0.05, 0.55, s * 0.26); b1.rotation.z = -0.8; b1.rotation.x = s * 0.35;
+    const b2 = b1.clone(); b2.position.set(-0.05, 0.62, s * 0.3); b2.rotation.z = 0.7;
+    headG.add(stem, b1, b2);
+  }
+  // ears
+  for (const s of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), fur);
+    ear.scale.set(0.6, 1.3, 0.5); ear.position.set(-0.12, 0.28, s * 0.3); ear.rotation.x = s * 0.6;
+    headG.add(ear);
+  }
+  // neck, legs, tail
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 0.7, 16), fur);
+  neck.position.set(0.7, 1.25, 0); neck.rotation.z = -0.5;
+  r.add(body, chest, neck, headG);
+  for (const [lx, lz] of [[0.45, 0.25], [0.45, -0.25], [-0.4, 0.25], [-0.4, -0.25]]) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.65, 10), fur);
+    leg.position.set(lx, 0.33, lz); leg.castShadow = true;
+    const hoof = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.08, 10), new THREE.MeshStandardMaterial({ color: 0x241811 }));
+    hoof.position.set(lx, 0.04, lz);
+    r.add(leg, hoof);
+  }
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), light); tail.position.set(-0.72, 1.0, 0);
+  r.add(tail);
+  // a red scarf
+  const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.06, 10, 20), new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.8 }));
+  scarf.position.set(0.66, 1.38, 0); scarf.rotation.y = Math.PI / 2; scarf.rotation.x = 0.5;
+  r.add(scarf);
+  r.position.set(x, 0, z); r.scale.setScalar(scale);
+  r.rotation.y = x < 0 ? 0.5 : Math.PI - 0.5;
+  r.userData = { head: headG, phase: Math.random() * 6 };
+  scene.add(r);
+  reindeer.push(r);
+  return r;
+}
+makeReindeer(-3.4, -2.4, 0.9, true);   // Rudolph, left, red nose
+makeReindeer(-4.6, -3.6, 0.75, false);
+makeReindeer(5.0, -3.6, 0.7, false);
+
+// ---------- Wreath, hanging stars and a string of lights on the wall ----------
+const wreath = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.2, 14, 36), new THREE.MeshStandardMaterial({ color: 0x1b6b30, roughness: 0.9 }));
+wreath.position.set(-1.6, 3.6, -4.9);
+scene.add(wreath);
+const wreathBow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), new THREE.MeshStandardMaterial({ color: 0xd32f2f }));
+wreathBow.position.set(-1.6, 2.9, -4.7); wreathBow.scale.set(1.6, 0.9, 0.6);
+scene.add(wreathBow);
+const stringLights = [];
+for (let i = 0; i < 20; i++) {
+  const x = -6 + i * 0.65;
+  const y = 5.4 - Math.sin((i / 19) * Math.PI) * 0.7;
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10),
+    new THREE.MeshStandardMaterial({ color: bulbColors[i % 5], emissive: bulbColors[i % 5], emissiveIntensity: 1.2 }));
+  b.position.set(x, y, -4.85);
+  scene.add(b); stringLights.push(b);
+}
+const hangingStars = [];
+for (const [sx, sy] of [[-4.2, 4.1], [0.3, 4.4], [3.6, 3.9], [-6, 3.7]]) {
+  const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.22),
+    new THREE.MeshStandardMaterial({ color: 0xffe082, emissive: 0xffc107, emissiveIntensity: 1.1 }));
+  s.position.set(sx, sy, -4.7);
+  scene.add(s); hangingStars.push(s);
+}
+
+// snowmen on the snow, one each side
+function makeSnowman(x, z, scale) {
+  const g = new THREE.Group();
+  const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+  const a = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 16), white); a.position.y = 0.45;
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.36, 20, 16), white); b.position.y = 1.15;
+  const c = new THREE.Mesh(new THREE.SphereGeometry(0.26, 20, 16), white); c.position.y = 1.66;
+  const carrot = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.26, 10), new THREE.MeshStandardMaterial({ color: 0xff8f00 }));
+  carrot.position.set(0, 1.66, 0.3); carrot.rotation.x = Math.PI / 2;
+  const eyeM = new THREE.MeshBasicMaterial({ color: 0x111111 });
+  const e1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeM); e1.position.set(-0.09, 1.72, 0.23);
+  const e2 = e1.clone(); e2.position.x = 0.09;
+  const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.26, 16), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+  hatTop.position.y = 2.0;
+  const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.04, 20), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+  hatBrim.position.y = 1.88;
+  g.add(a, b, c, carrot, e1, e2, hatTop, hatBrim);
+  g.children.forEach(m => { m.castShadow = true; });
+  g.position.set(x, 0, z); g.scale.setScalar(scale);
+  scene.add(g);
+  return g;
+}
+makeSnowman(-2.6, -1.6, 0.8);
+makeSnowman(5.6, -1.2, 0.7);
 
 // falling snow
 const SNOW = 260;
@@ -400,7 +535,8 @@ function setExtraHat(emoji) {
   extraHat.visible = true;
 }
 
-santa.position.set(0.5, 0, 0);
+santa.position.set(0.35, 0, 0);
+santa.scale.setScalar(0.92);
 
 // ---------- Cookie and milk props (they sit on the table) ----------
 const cookie = new THREE.Group();
@@ -521,6 +657,17 @@ function animate() {
   // tree lights twinkle and star spins
   bulbs.forEach((b, i) => { b.material.emissiveIntensity = 0.7 + Math.sin(t * 3 + i) * 0.5; });
   star.rotation.y = t * 1.5;
+
+  // wall lights, hanging stars, wreath and reindeer come alive
+  stringLights.forEach((b, i) => { b.material.emissiveIntensity = 0.5 + Math.abs(Math.sin(t * 2 + i * 0.7)) * 1.1; });
+  hangingStars.forEach((s, i) => { s.rotation.y = t * 1.2 + i; s.position.y += Math.sin(t * 2 + i) * 0.0015; });
+  wreath.rotation.z = Math.sin(t * 0.8) * 0.04;
+  for (const r of reindeer) {
+    const h = r.userData.head;
+    h.rotation.z = Math.sin(t * 1.2 + r.userData.phase) * 0.18 - 0.1;
+    h.rotation.y = Math.sin(t * 0.7 + r.userData.phase) * 0.35;
+    r.position.y = Math.abs(Math.sin(t * 1.8 + r.userData.phase)) * 0.04;
+  }
 
   // snow
   const sp = snowGeo.attributes.position;
