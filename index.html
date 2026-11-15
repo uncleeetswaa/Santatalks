@@ -2,149 +2,52 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>Talking Santa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Talking Santa 3D</title>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-  html, body { margin: 0; height: 100%; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; overflow: hidden; }
-  body { background: linear-gradient(#10264a 0%, #2d5f9a 55%, #cfe6f7 55%, #ffffff 100%); display: flex; flex-direction: column; align-items: center; }
-  #top { width: 100%; display: flex; justify-content: space-between; padding: 12px 16px; font-size: 22px; color: white; z-index: 3; }
-  #stage { position: relative; flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
-  #santaSvg { width: min(92vw, 52vh); height: auto; touch-action: none; filter: drop-shadow(0 12px 10px rgba(0,0,0,0.25)); transition: transform 0.15s; }
-  #santaSvg.bounce { transform: scale(1.06) rotate(-2deg); }
-  #speech { position: absolute; top: 4%; background: white; border-radius: 22px; padding: 10px 18px; font-size: 22px; max-width: 82%; text-align: center; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 3; }
-  #status { position: absolute; bottom: 6px; width: 100%; text-align: center; color: #234; font-size: 15px; }
-  #bar { width: 100%; display: flex; justify-content: space-around; padding: 14px 8px 26px; background: #c62828; z-index: 3; }
-  .btn { width: 76px; height: 76px; border-radius: 50%; border: 4px solid white; background: #ef5350; font-size: 36px; color: white; box-shadow: 0 4px 0 #8e0000; }
-  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #8e0000; }
-  .btn.on { background: #43a047; animation: pulse 0.8s infinite alternate; }
-  @keyframes pulse { to { transform: scale(1.1); } }
-  #game { position: fixed; inset: 0; background: linear-gradient(#0d2b52, #3b78b8); display: none; z-index: 10; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Chalkboard SE', 'Comic Sans MS', sans-serif; background: #10264a; }
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #top { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; padding: 14px 18px; font-size: 24px; color: white; z-index: 5; text-shadow: 0 2px 4px rgba(0,0,0,0.5); pointer-events: none; }
+  #speech { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); background: white; border-radius: 24px; padding: 12px 20px; font-size: 22px; max-width: 86%; text-align: center; display: none; box-shadow: 0 6px 16px rgba(0,0,0,0.3); z-index: 6; }
+  #status { position: fixed; bottom: 118px; width: 100%; text-align: center; color: white; font-size: 16px; z-index: 5; text-shadow: 0 2px 4px rgba(0,0,0,0.6); pointer-events: none; }
+  #bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 12px 6px 24px; background: linear-gradient(#c62828, #8e1111); z-index: 7; }
+  .btn { width: 66px; height: 66px; border-radius: 50%; border: 4px solid white; background: #ef5350; font-size: 30px; color: white; box-shadow: 0 4px 0 #6d0000; padding: 0; }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #6d0000; }
+  .btn.on { background: #43a047; box-shadow: 0 4px 0 #1b5e20; }
+  #start { position: fixed; inset: 0; z-index: 30; background: radial-gradient(circle at 50% 30%, #2d5f9a, #10264a); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
+  #start h1 { font-size: 44px; margin: 0 0 10px; text-shadow: 0 3px 8px rgba(0,0,0,0.5); }
+  #start p { font-size: 20px; margin: 0 0 26px; }
+  #startBtn { font-size: 30px; padding: 18px 44px; border-radius: 44px; border: 4px solid white; background: #c62828; color: white; box-shadow: 0 6px 0 #7a0000; }
+  #loading { margin-top: 18px; font-size: 16px; opacity: 0.8; }
+  #game { position: fixed; inset: 0; background: linear-gradient(#0d2b52, #3b78b8); display: none; z-index: 20; }
   #gameTop { display: flex; justify-content: space-between; padding: 14px 18px; color: white; font-size: 24px; }
   .gift { position: absolute; font-size: 64px; }
   #closeGame { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); }
-  #shop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 20; align-items: center; justify-content: center; }
-  #shopBox { background: white; border-radius: 24px; padding: 20px; width: 85%; max-width: 380px; text-align: center; }
-  .hatBtn { font-size: 40px; margin: 6px; padding: 8px 14px; border-radius: 16px; border: 3px solid #c62828; background: #fff; }
+  #shop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 25; align-items: center; justify-content: center; }
+  #shopBox { background: white; border-radius: 24px; padding: 20px; width: 88%; max-width: 380px; text-align: center; }
+  .hatBtn { font-size: 38px; margin: 6px; padding: 8px 14px; border-radius: 16px; border: 3px solid #c62828; background: #fff; }
   .hatBtn small { display: block; font-size: 14px; }
-  #start { position: fixed; inset: 0; z-index: 30; background: linear-gradient(#10264a, #2d5f9a); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
-  #start h1 { font-size: 40px; margin: 0 0 8px; }
-  #start p { font-size: 20px; margin: 0 0 24px; }
-  #startBtn { font-size: 30px; padding: 18px 40px; border-radius: 40px; border: 4px solid white; background: #c62828; color: white; box-shadow: 0 6px 0 #7a0000; }
-  .snow { position: fixed; top: -20px; color: white; pointer-events: none; z-index: 1; animation: fall linear infinite; }
-  @keyframes fall { to { transform: translateY(110vh); } }
 </style>
 </head>
 <body>
+
+<canvas id="scene"></canvas>
 
 <div id="start">
   <h1>Talking Santa</h1>
   <p>Tap the button, then just talk to Santa!</p>
   <button id="startBtn">Say Hello</button>
+  <div id="loading">Loading Santa...</div>
 </div>
 
 <div id="top"><div>🪙 <span id="coins">0</span></div><div>❤️ <span id="happy">5</span></div></div>
-
-<div id="stage">
-  <div id="speech"></div>
-
-  <svg id="santaSvg" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="skin" cx="50%" cy="45%" r="60%">
-        <stop offset="0%" stop-color="#ffd9bd"/><stop offset="100%" stop-color="#f2a98a"/>
-      </radialGradient>
-      <linearGradient id="suit" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#e53935"/><stop offset="100%" stop-color="#a31515"/>
-      </linearGradient>
-      <linearGradient id="hatg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#ef5350"/><stop offset="100%" stop-color="#b71c1c"/>
-      </linearGradient>
-      <radialGradient id="fur" cx="50%" cy="40%" r="70%">
-        <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#dfe8f2"/>
-      </radialGradient>
-      <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#ff8a80" stop-opacity="0.8"/><stop offset="100%" stop-color="#ff8a80" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-
-    <!-- body -->
-    <path d="M60 520 Q70 330 200 310 Q330 330 340 520 Z" fill="url(#suit)"/>
-    <rect x="60" y="440" width="280" height="34" fill="#2b2b2b"/>
-    <rect x="170" y="436" width="60" height="42" rx="6" fill="#ffca28" stroke="#c79100" stroke-width="4"/>
-    <rect x="184" y="448" width="32" height="18" rx="3" fill="#2b2b2b"/>
-    <path d="M150 520 Q200 340 250 520" fill="url(#fur)" opacity="0.9"/>
-    <circle cx="200" cy="400" r="7" fill="#fff3"/>
-    <!-- arms -->
-    <g id="armL" style="transform-origin: 90px 380px;">
-      <path d="M90 350 Q40 400 70 470 L110 450 Q100 400 120 360 Z" fill="url(#suit)"/>
-      <ellipse cx="85" cy="470" rx="30" ry="22" fill="url(#fur)"/>
-      <circle cx="85" cy="490" r="22" fill="#2b2b2b"/>
-    </g>
-    <g id="armR" style="transform-origin: 310px 380px;">
-      <path d="M310 350 Q360 400 330 470 L290 450 Q300 400 280 360 Z" fill="url(#suit)"/>
-      <ellipse cx="315" cy="470" rx="30" ry="22" fill="url(#fur)"/>
-      <circle cx="315" cy="490" r="22" fill="#2b2b2b"/>
-    </g>
-
-    <!-- beard -->
-    <g id="beard" style="transform-origin: 200px 230px;">
-      <path d="M85 215 Q70 330 130 385 Q165 420 200 425 Q235 420 270 385 Q330 330 315 215 Q290 270 200 270 Q110 270 85 215 Z" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
-      <path d="M130 330 Q150 360 175 350 M225 350 Q250 360 270 330 M170 385 Q200 405 230 385" stroke="#c9d6e4" stroke-width="4" fill="none" stroke-linecap="round"/>
-    </g>
-
-    <!-- head -->
-    <ellipse cx="200" cy="190" rx="100" ry="92" fill="url(#skin)"/>
-    <ellipse cx="120" cy="205" rx="20" ry="26" fill="#f2a98a"/>
-    <ellipse cx="280" cy="205" rx="20" ry="26" fill="#f2a98a"/>
-    <ellipse cx="140" cy="215" rx="26" ry="18" fill="url(#cheek)"/>
-    <ellipse cx="260" cy="215" rx="26" ry="18" fill="url(#cheek)"/>
-
-    <!-- eyebrows -->
-    <g id="brows">
-      <path d="M130 150 Q155 130 180 148 Q155 140 130 150 Z" fill="#fff" stroke="#dfe8f2" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M220 148 Q245 130 270 150 Q245 140 220 148 Z" fill="#fff" stroke="#dfe8f2" stroke-width="6" stroke-linejoin="round"/>
-    </g>
-
-    <!-- eyes -->
-    <g id="eyes" style="transform-origin: 200px 175px;">
-      <ellipse cx="155" cy="175" rx="20" ry="22" fill="#fff"/>
-      <ellipse cx="245" cy="175" rx="20" ry="22" fill="#fff"/>
-      <g id="pupils">
-        <circle cx="158" cy="178" r="13" fill="#2c6fb0"/><circle cx="158" cy="178" r="7" fill="#0b1e33"/><circle cx="163" cy="172" r="4" fill="#fff"/>
-        <circle cx="242" cy="178" r="13" fill="#2c6fb0"/><circle cx="242" cy="178" r="7" fill="#0b1e33"/><circle cx="247" cy="172" r="4" fill="#fff"/>
-      </g>
-    </g>
-
-    <!-- nose -->
-    <ellipse cx="200" cy="212" rx="20" ry="17" fill="#f08a6c"/>
-    <ellipse cx="194" cy="206" rx="7" ry="5" fill="#ffc4b0"/>
-
-    <!-- moustache -->
-    <path d="M90 245 Q130 205 200 240 Q270 205 310 245 Q290 290 235 268 Q200 258 165 268 Q110 290 90 245 Z" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
-
-    <!-- mouth -->
-    <g id="mouthG" style="transform-origin: 200px 285px;">
-      <ellipse id="mouth" cx="200" cy="288" rx="26" ry="6" fill="#7a1f2b"/>
-      <ellipse id="tongue" cx="200" cy="294" rx="14" ry="3" fill="#ef7a85" opacity="0"/>
-    </g>
-
-    <!-- hat -->
-    <g id="hatG">
-      <path d="M95 130 Q110 20 215 22 Q300 24 310 130 Q200 100 95 130 Z" fill="url(#hatg)"/>
-      <path d="M215 22 Q300 20 330 90 Q320 60 290 55 Q260 30 215 22 Z" fill="#a31515"/>
-      <circle cx="330" cy="92" r="26" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
-      <path d="M80 140 Q200 95 320 140 Q330 168 300 170 Q200 135 100 170 Q70 168 80 140 Z" fill="url(#fur)" stroke="#c9d6e4" stroke-width="3"/>
-    </g>
-
-    <!-- extra hat from the shop -->
-    <text id="extraHat" x="200" y="60" font-size="80" text-anchor="middle"></text>
-  </svg>
-
-  <div id="status">Waking up...</div>
-</div>
+<div id="speech"></div>
+<div id="status"></div>
 
 <div id="bar">
   <button class="btn" id="cookieBtn">🍪</button>
+  <button class="btn" id="milkBtn">🥛</button>
   <button class="btn on" id="micBtn">🎤</button>
   <button class="btn" id="giftBtn">🎁</button>
   <button class="btn" id="shopBtn">🎩</button>
@@ -164,142 +67,643 @@
   </div>
 </div>
 
-<script>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// =====================================================================
+//  PART 1: the 3D world and Santa
+// =====================================================================
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x10264a);
+scene.fog = new THREE.Fog(0x10264a, 9, 22);
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 60);
+camera.position.set(0, 1.55, 6.4);
+camera.lookAt(0, 1.35, 0);
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // on tall phone screens, pull the camera back a bit so Santa always fits
+  camera.position.z = w / h < 0.7 ? 7.6 : 6.4;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------- Lights ----------
+scene.add(new THREE.HemisphereLight(0xcfe3ff, 0x3a2418, 0.9));
+const key = new THREE.DirectionalLight(0xfff1d6, 2.4);
+key.position.set(3, 6, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024);
+key.shadow.camera.left = -4; key.shadow.camera.right = 4;
+key.shadow.camera.top = 5; key.shadow.camera.bottom = -2;
+key.shadow.radius = 4;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x88b8ff, 1.2);
+rim.position.set(-4, 3, -3);
+scene.add(rim);
+const warm = new THREE.PointLight(0xffa24a, 12, 9);
+warm.position.set(-2.6, 1.8, 1.8);
+scene.add(warm);
+
+// ---------- Room: floor, back wall, fireplace glow, tree ----------
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(9, 48),
+  new THREE.MeshStandardMaterial({ color: 0xe9f1fb, roughness: 0.9 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const wall = new THREE.Mesh(
+  new THREE.PlaneGeometry(30, 14),
+  new THREE.MeshStandardMaterial({ color: 0x1c3f73, roughness: 1 })
+);
+wall.position.set(0, 5, -5);
+scene.add(wall);
+
+// table for the cookie and milk
+const table = new THREE.Group();
+const tableTop = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.95, 0.95, 0.1, 32),
+  new THREE.MeshStandardMaterial({ color: 0x8a5a33, roughness: 0.6 })
+);
+tableTop.position.y = 0.95;
+tableTop.castShadow = true; tableTop.receiveShadow = true;
+const tableLeg = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.12, 0.2, 0.95, 16),
+  new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.7 })
+);
+tableLeg.position.y = 0.47;
+tableLeg.castShadow = true;
+table.add(tableTop, tableLeg);
+table.position.set(-1.9, 0, 0.9);
+scene.add(table);
+
+// christmas tree in the back
+const tree = new THREE.Group();
+const greenMat = new THREE.MeshStandardMaterial({ color: 0x1f7a3a, roughness: 0.8 });
+for (let i = 0; i < 4; i++) {
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(1.5 - i * 0.28, 1.3, 20), greenMat);
+  cone.position.y = 1.2 + i * 0.85;
+  cone.castShadow = true;
+  tree.add(cone);
+}
+const star = new THREE.Mesh(
+  new THREE.OctahedronGeometry(0.22),
+  new THREE.MeshStandardMaterial({ color: 0xffd54f, emissive: 0xffb300, emissiveIntensity: 1.4 })
+);
+star.position.y = 4.75;
+tree.add(star);
+const bulbColors = [0xff5252, 0xffd740, 0x40c4ff, 0xb388ff, 0x69f0ae];
+const bulbs = [];
+for (let i = 0; i < 26; i++) {
+  const layer = Math.floor(Math.random() * 4);
+  const r = (1.35 - layer * 0.28) * (0.55 + Math.random() * 0.4);
+  const a = Math.random() * Math.PI * 2;
+  const bulb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.075, 12, 12),
+    new THREE.MeshStandardMaterial({ color: bulbColors[i % 5], emissive: bulbColors[i % 5], emissiveIntensity: 1.2 })
+  );
+  bulb.position.set(Math.cos(a) * r, 1.0 + layer * 0.85 + Math.random() * 0.3, Math.sin(a) * r);
+  tree.add(bulb);
+  bulbs.push(bulb);
+}
+tree.position.set(3.1, 0, -2.6);
+tree.scale.setScalar(0.95);
+scene.add(tree);
+
+// falling snow
+const SNOW = 260;
+const snowGeo = new THREE.BufferGeometry();
+const snowPos = new Float32Array(SNOW * 3);
+for (let i = 0; i < SNOW; i++) {
+  snowPos[i * 3] = (Math.random() - 0.5) * 14;
+  snowPos[i * 3 + 1] = Math.random() * 8;
+  snowPos[i * 3 + 2] = (Math.random() - 0.5) * 10 - 1;
+}
+snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+const snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.07, transparent: true, opacity: 0.85 }));
+scene.add(snow);
+
+// ---------- Materials for Santa (soft, glossy, Pixar-ish) ----------
+const skinMat = new THREE.MeshPhysicalMaterial({ color: 0xffc9a3, roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.5 });
+const redMat = new THREE.MeshPhysicalMaterial({ color: 0xd8232a, roughness: 0.65, sheen: 1, sheenColor: new THREE.Color(0xff7b7b), sheenRoughness: 0.5 });
+const furMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
+const blackMat = new THREE.MeshPhysicalMaterial({ color: 0x1a1a1a, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.1 });
+const goldMat = new THREE.MeshStandardMaterial({ color: 0xffca28, metalness: 0.9, roughness: 0.25 });
+const eyeWhiteMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.15, clearcoat: 1 });
+const irisMat = new THREE.MeshPhysicalMaterial({ color: 0x2f7fd1, roughness: 0.2, clearcoat: 1 });
+const pupilMat = new THREE.MeshBasicMaterial({ color: 0x050a14 });
+const mouthMat = new THREE.MeshStandardMaterial({ color: 0x5a0f1a, roughness: 0.8, side: THREE.DoubleSide });
+const tongueMat = new THREE.MeshStandardMaterial({ color: 0xe8707e, roughness: 0.6 });
+
+function mesh(geo, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  return m;
+}
+function fluff(radius, mat, x, y, z, sx = 1, sy = 1, sz = 1) {
+  const m = mesh(new THREE.SphereGeometry(radius, 28, 22), mat, x, y, z);
+  m.scale.set(sx, sy, sz);
+  return m;
+}
+
+// ---------- Build Santa ----------
+const santa = new THREE.Group();
+scene.add(santa);
+
+// body: a big round tummy
+const body = new THREE.Group();
+body.add(fluff(0.95, redMat, 0, 1.05, 0, 1, 1.05, 0.92));
+// belt and buckle
+const belt = mesh(new THREE.TorusGeometry(0.92, 0.09, 16, 48), blackMat, 0, 0.95, 0);
+belt.rotation.x = Math.PI / 2;
+belt.scale.set(1, 0.9, 1);
+body.add(belt);
+const buckle = mesh(new THREE.BoxGeometry(0.34, 0.3, 0.08), goldMat, 0, 0.95, 0.86);
+body.add(buckle);
+body.add(mesh(new THREE.BoxGeometry(0.18, 0.16, 0.09), blackMat, 0, 0.95, 0.87));
+// white fur coat trim down the front
+const trim = mesh(new THREE.CapsuleGeometry(0.1, 1.1, 8, 16), furMat, 0, 1.15, 0.86);
+trim.scale.set(1, 1, 0.55);
+body.add(trim);
+// buttons
+for (const by of [1.45, 1.2, 0.72]) body.add(fluff(0.05, blackMat, 0, by, 0.93));
+santa.add(body);
+
+// legs and boots
+for (const sx of [-1, 1]) {
+  const leg = mesh(new THREE.CapsuleGeometry(0.24, 0.3, 8, 16), redMat, sx * 0.38, 0.32, 0.05);
+  const cuff = mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.14, 24), furMat, sx * 0.38, 0.5, 0.05);
+  const boot = mesh(new THREE.CapsuleGeometry(0.22, 0.2, 8, 16), blackMat, sx * 0.38, 0.14, 0.18);
+  boot.rotation.x = Math.PI / 2; boot.scale.set(1, 1.1, 0.8);
+  santa.add(leg, cuff, boot);
+}
+
+// arms (pivot at shoulder so they can swing and reach)
+function makeArm(side) {
+  const pivot = new THREE.Group();
+  pivot.position.set(side * 0.92, 1.72, 0.05);
+  const upper = mesh(new THREE.CapsuleGeometry(0.2, 0.45, 8, 16), redMat, 0, -0.35, 0);
+  const cuff = mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.14, 24), furMat, 0, -0.78, 0);
+  const hand = fluff(0.2, furMat, 0, -0.95, 0.02, 1, 1, 0.9);
+  const mitten = fluff(0.17, blackMat, 0, -0.95, 0, 1, 1, 1);
+  mitten.visible = false;
+  const glove = fluff(0.2, skinMat, 0, -0.97, 0.02, 1, 1.05, 0.9);
+  pivot.add(upper, cuff, glove);
+  pivot.userData.hand = glove;
+  // rest pose: slightly out
+  pivot.rotation.z = side * 0.28;
+  return pivot;
+}
+const armL = makeArm(-1);
+const armR = makeArm(1);
+santa.add(armL, armR);
+
+// head group (everything on the head moves together)
+const head = new THREE.Group();
+head.position.set(0, 2.55, 0.05);
+santa.add(head);
+
+// face base
+const face = fluff(0.78, skinMat, 0, 0, 0, 1, 0.95, 0.92);
+head.add(face);
+
+// cheeks, rosy
+const cheekMat = new THREE.MeshStandardMaterial({ color: 0xff8f8f, roughness: 0.8, transparent: true, opacity: 0.55 });
+for (const sx of [-1, 1]) head.add(fluff(0.2, cheekMat, sx * 0.43, -0.12, 0.6, 1.2, 0.8, 0.5));
+
+// ears
+for (const sx of [-1, 1]) head.add(fluff(0.15, skinMat, sx * 0.75, 0.02, 0, 0.7, 1, 0.8));
+
+// eyes: white, iris, pupil, highlight, and an eyelid that scales to blink
+const eyes = [];
+for (const sx of [-1, 1]) {
+  const eye = new THREE.Group();
+  eye.position.set(sx * 0.29, 0.14, 0.62);
+  eye.add(fluff(0.17, eyeWhiteMat, 0, 0, 0, 1, 1.15, 0.7));
+  const iris = fluff(0.1, irisMat, 0, -0.01, 0.1, 1, 1.05, 0.6);
+  const pupil = fluff(0.055, pupilMat, 0, -0.01, 0.15, 1, 1, 0.5);
+  const glint = fluff(0.025, new THREE.MeshBasicMaterial({ color: 0xffffff }), 0.04, 0.045, 0.19);
+  const look = new THREE.Group();
+  look.add(iris, pupil, glint);
+  eye.add(look);
+  eye.userData.look = look;
+  head.add(eye);
+  eyes.push(eye);
+}
+
+// eyebrows: bushy white
+const brows = [];
+for (const sx of [-1, 1]) {
+  const brow = mesh(new THREE.CapsuleGeometry(0.06, 0.26, 6, 12), furMat, sx * 0.3, 0.42, 0.62);
+  brow.rotation.z = Math.PI / 2 + sx * 0.18;
+  brow.scale.set(1, 1, 0.8);
+  head.add(brow);
+  brows.push(brow);
+}
+
+// nose: round and rosy
+head.add(fluff(0.13, new THREE.MeshPhysicalMaterial({ color: 0xff9a85, roughness: 0.4, clearcoat: 0.4 }), 0, -0.02, 0.76, 1, 0.9, 0.9));
+
+// mouth: a dark ellipse that opens and closes, with a tongue
+const mouthGroup = new THREE.Group();
+mouthGroup.position.set(0, -0.3, 0.68);
+const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), mouthMat);
+mouth.scale.set(1, 0.18, 0.45);
+const tongue = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), tongueMat);
+tongue.scale.set(1.1, 0.4, 0.5);
+tongue.position.set(0, -0.03, 0.02);
+mouthGroup.add(mouth, tongue);
+head.add(mouthGroup);
+
+// moustache: two big curly puffs over the mouth
+const moustache = new THREE.Group();
+for (const sx of [-1, 1]) {
+  const puff = fluff(0.27, furMat, sx * 0.24, -0.17, 0.7, 1.35, 0.7, 0.75);
+  puff.rotation.z = sx * -0.25;
+  const curl = fluff(0.13, furMat, sx * 0.5, -0.1, 0.62, 1, 1, 0.9);
+  moustache.add(puff, curl);
+}
+head.add(moustache);
+
+// beard: a cluster of fluffy balls that wobble when he talks
+const beard = new THREE.Group();
+beard.position.set(0, -0.35, 0.05);
+const beardPuffs = [];
+const beardSpots = [
+  [0, -0.55, 0.55, 0.42], [-0.32, -0.45, 0.5, 0.36], [0.32, -0.45, 0.5, 0.36],
+  [-0.55, -0.15, 0.35, 0.34], [0.55, -0.15, 0.35, 0.34], [-0.2, -0.85, 0.45, 0.3],
+  [0.2, -0.85, 0.45, 0.3], [0, -1.05, 0.4, 0.28], [-0.62, -0.5, 0.25, 0.28], [0.62, -0.5, 0.25, 0.28],
+  [0, -0.3, 0.6, 0.3]
+];
+for (const [x, y, z, r] of beardSpots) {
+  const p = fluff(r, furMat, x, y, z, 1, 1.1, 0.9);
+  p.userData.base = new THREE.Vector3(x, y, z);
+  p.userData.phase = Math.random() * 6;
+  beard.add(p);
+  beardPuffs.push(p);
+}
+head.add(beard);
+
+// hat: red cone leaning over, fur band and a pom-pom
+const hat = new THREE.Group();
+hat.position.set(0, 0.5, 0);
+const cone = mesh(new THREE.ConeGeometry(0.72, 1.25, 32), redMat, 0, 0.55, 0);
+cone.rotation.z = -0.12;
+hat.add(cone);
+const band = mesh(new THREE.TorusGeometry(0.72, 0.17, 20, 48), furMat, 0, 0.0, 0);
+band.rotation.x = Math.PI / 2;
+band.scale.set(1, 1, 1.2);
+hat.add(band);
+const pom = fluff(0.2, furMat, 0.22, 1.12, 0);
+hat.add(pom);
+head.add(hat);
+
+// extra hat slot (the shop swaps emoji hats in here)
+const extraHatCanvas = document.createElement('canvas');
+extraHatCanvas.width = extraHatCanvas.height = 256;
+const extraHatCtx = extraHatCanvas.getContext('2d');
+const extraHatTex = new THREE.CanvasTexture(extraHatCanvas);
+const extraHat = new THREE.Sprite(new THREE.SpriteMaterial({ map: extraHatTex, transparent: true }));
+extraHat.scale.set(1.1, 1.1, 1);
+extraHat.position.set(0, 1.5, 0.2);
+extraHat.visible = false;
+head.add(extraHat);
+function setExtraHat(emoji) {
+  extraHatCtx.clearRect(0, 0, 256, 256);
+  if (!emoji) { extraHat.visible = false; return; }
+  extraHatCtx.font = '190px serif';
+  extraHatCtx.textAlign = 'center';
+  extraHatCtx.textBaseline = 'middle';
+  extraHatCtx.fillText(emoji, 128, 140);
+  extraHatTex.needsUpdate = true;
+  extraHat.visible = true;
+}
+
+santa.position.set(0.5, 0, 0);
+
+// ---------- Cookie and milk props (they sit on the table) ----------
+const cookie = new THREE.Group();
+const cookieBody = mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.06, 28), new THREE.MeshStandardMaterial({ color: 0xc98a45, roughness: 0.9 }), 0, 0, 0);
+cookie.add(cookieBody);
+for (let i = 0; i < 7; i++) {
+  const chip = mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.8 }),
+    (Math.random() - 0.5) * 0.25, 0.03, (Math.random() - 0.5) * 0.25);
+  cookie.add(chip);
+}
+cookie.position.set(-1.9, 1.03, 0.9);
+scene.add(cookie);
+
+const glass = new THREE.Group();
+const glassBody = mesh(new THREE.CylinderGeometry(0.17, 0.14, 0.4, 24, 1, true),
+  new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, roughness: 0.05, side: THREE.DoubleSide }), 0, 0, 0);
+const milk = mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.3, 24), new THREE.MeshStandardMaterial({ color: 0xfdfdfd, roughness: 0.4 }), 0, -0.04, 0);
+milk.userData.full = 0.3;
+glass.add(glassBody, milk);
+glass.position.set(-1.55, 1.25, 0.9);
+scene.add(glass);
+
+// ---------- Animation state shared with Part 2 ----------
+const state = {
+  talking: false,
+  mood: 0,          // 0 calm, 1 happy bounce
+  eating: 0,        // 0..1 progress of the cookie or milk animation
+  action: null,     // 'cookie' | 'milk' | null
+  actionT: 0,
+  lookX: 0, lookY: 0,
+  blinkT: 0,
+  nextBlink: 2,
+  mouthOpen: 0,
+  cookieBites: 0,
+  milkLevel: 1
+};
+
+// look toward the finger
+function setLook(clientX, clientY) {
+  state.lookX = (clientX / window.innerWidth - 0.5) * 2;
+  state.lookY = -(clientY / window.innerHeight - 0.5) * 2;
+}
+canvas.addEventListener('pointermove', e => setLook(e.clientX, e.clientY));
+
+// raycast so a tap on Santa is a tap on Santa
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+function hitSanta(clientX, clientY) {
+  pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  return raycaster.intersectObject(santa, true).length > 0;
+}
+
+// ---------- Main animation loop ----------
+const clock = new THREE.Clock();
+const tmp = new THREE.Vector3();
+let loopHooks = [];            // Part 2 can add per-frame functions here
+function onFrame(fn) { loopHooks.push(fn); }
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  // breathing and idle sway
+  const breathe = Math.sin(t * 1.6) * 0.02;
+  body.scale.set(1 + breathe, 1 + breathe * 1.3, 1 + breathe);
+  santa.rotation.y = Math.sin(t * 0.5) * 0.06 + state.lookX * 0.18;
+  head.rotation.y = state.lookX * 0.35;
+  head.rotation.x = -state.lookY * 0.15 + (state.talking ? Math.sin(t * 7) * 0.025 : 0);
+  head.rotation.z = Math.sin(t * 0.9) * 0.03;
+  santa.position.y = state.mood > 0.01 ? Math.abs(Math.sin(t * 9)) * 0.12 * state.mood : 0;
+  state.mood = Math.max(0, state.mood - dt * 1.2);
+
+  // eyes follow the finger a little
+  for (const eye of eyes) {
+    eye.userData.look.position.x += (state.lookX * 0.045 - eye.userData.look.position.x) * 0.15;
+    eye.userData.look.position.y += (state.lookY * 0.035 - eye.userData.look.position.y) * 0.15;
+  }
+
+  // blinking
+  state.nextBlink -= dt;
+  if (state.nextBlink <= 0) { state.blinkT = 0.16; state.nextBlink = 2 + Math.random() * 3; }
+  let blink = 1;
+  if (state.blinkT > 0) { state.blinkT -= dt; blink = Math.max(0.08, Math.abs(state.blinkT - 0.08) / 0.08); }
+  for (const eye of eyes) eye.scale.y = blink;
+
+  // talking mouth
+  let targetOpen = 0.08;
+  if (state.talking) targetOpen = 0.35 + Math.abs(Math.sin(t * 11)) * 0.9 + Math.sin(t * 5.3) * 0.2;
+  if (state.action && state.eating > 0.2 && state.eating < 0.85) targetOpen = 0.9 * Math.abs(Math.sin(state.eating * 40));
+  state.mouthOpen += (targetOpen - state.mouthOpen) * 0.35;
+  mouth.scale.y = 0.12 + state.mouthOpen * 0.5;
+  mouth.scale.x = 1 - state.mouthOpen * 0.12;
+  tongue.visible = state.mouthOpen > 0.5;
+  mouthGroup.position.y = -0.3 - state.mouthOpen * 0.03;
+
+  // eyebrows lift when happy or talking
+  const browLift = (state.talking ? 0.04 : 0) + state.mood * 0.05;
+  for (const b of brows) b.position.y += (0.42 + browLift - b.position.y) * 0.2;
+
+  // beard wobble
+  for (const p of beardPuffs) {
+    const w = state.talking ? 0.035 : 0.01;
+    p.position.x = p.userData.base.x + Math.sin(t * 6 + p.userData.phase) * w;
+    p.position.y = p.userData.base.y - state.mouthOpen * 0.06 * (p.userData.base.y < -0.4 ? 1 : 0.3) + Math.sin(t * 1.6 + p.userData.phase) * 0.008;
+  }
+
+  // resting arm sway, unless an action is moving them
+  if (!state.action) {
+    armL.rotation.z = -0.28 - Math.sin(t * 1.6) * 0.03;
+    armR.rotation.z = 0.28 + Math.sin(t * 1.6) * 0.03;
+    armL.rotation.x += (0 - armL.rotation.x) * 0.15;
+    armR.rotation.x += (0 - armR.rotation.x) * 0.15;
+  }
+
+  // tree lights twinkle and star spins
+  bulbs.forEach((b, i) => { b.material.emissiveIntensity = 0.7 + Math.sin(t * 3 + i) * 0.5; });
+  star.rotation.y = t * 1.5;
+
+  // snow
+  const sp = snowGeo.attributes.position;
+  for (let i = 0; i < SNOW; i++) {
+    sp.array[i * 3 + 1] -= dt * (0.5 + (i % 5) * 0.12);
+    sp.array[i * 3] += Math.sin(t + i) * dt * 0.1;
+    if (sp.array[i * 3 + 1] < 0) sp.array[i * 3 + 1] = 8;
+  }
+  sp.needsUpdate = true;
+
+  for (const fn of loopHooks) fn(dt, t);
+  renderer.render(scene, camera);
+}
+animate();
+document.getElementById('loading').textContent = 'Santa is ready!';
+
+// =====================================================================
+//  END OF PART 1. Part 2 carries on from here, inside this same script.
+// =====================================================================
+ // =====================================================================
+//  PART 2: voice, replies, mic, music, cookie, milk, shop and game
+// =====================================================================
+
+const $ = id => document.getElementById(id);
+
 // ---------- Saved data ----------
-let save = JSON.parse(localStorage.getItem('santaSave') || '{"coins":0,"owned":[""],"hat":""}');
+let save = JSON.parse(localStorage.getItem('santaSave3d') || '{"coins":0,"owned":[""],"hat":""}');
 let happy = 5;
-function store() { localStorage.setItem('santaSave', JSON.stringify(save)); }
+function store() { localStorage.setItem('santaSave3d', JSON.stringify(save)); }
 function refresh() {
-  document.getElementById('coins').textContent = save.coins;
-  document.getElementById('happy').textContent = happy;
-  document.getElementById('extraHat').textContent = save.hat;
+  $('coins').textContent = save.coins;
+  $('happy').textContent = happy;
+  setExtraHat(save.hat);
 }
 refresh();
 
-// ---------- Snow ----------
-for (let i = 0; i < 24; i++) {
-  const s = document.createElement('div');
-  s.className = 'snow';
-  s.textContent = '❄';
-  s.style.left = Math.random() * 100 + 'vw';
-  s.style.fontSize = (10 + Math.random() * 16) + 'px';
-  s.style.opacity = 0.4 + Math.random() * 0.5;
-  s.style.animationDuration = (6 + Math.random() * 8) + 's';
-  s.style.animationDelay = (-Math.random() * 10) + 's';
-  document.body.appendChild(s);
-}
+// ---------- Smart replies ----------
+// Santa listens for keywords and picks a random reply from the matching group.
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+let lastReply = '';
 
-// ---------- Santa animation: blinking, mouth, beard, arms ----------
-const svg = document.getElementById('santaSvg');
-const eyes = document.getElementById('eyes');
-const mouth = document.getElementById('mouth');
-const tongue = document.getElementById('tongue');
-const beard = document.getElementById('beard');
-const pupils = document.getElementById('pupils');
-const armL = document.getElementById('armL');
-const armR = document.getElementById('armR');
-const brows = document.getElementById('brows');
-let talking = false;
+const brain = [
+  { keys: ['hello', 'hi ', 'hi,', 'hey', 'good morning', 'good afternoon', 'good evening', 'g\'day'],
+    say: ['Ho ho ho! Hello there, my friend! How are you today?', 'Well hello! Merry Christmas! How are you going?', 'Hi hi hi! It is so good to see you!', 'Ho ho ho, hello! The elves said somebody special was coming to visit!'] },
+  { keys: ['how are you', 'how are you going', 'how you going', 'how\'s it going', 'you okay'],
+    say: ['I am jolly good, thank you! My tummy is full of cookies and my heart is full of Christmas!', 'Ho ho ho, I am wonderful! Rudolph just did a loop de loop and I am still dizzy!', 'Fantastic! I just finished a very big nap. Santa needs lots of naps!'] },
+  { keys: ['merry christmas', 'happy christmas', 'happy holidays'],
+    say: ['Merry Christmas to you too! Ho ho ho!', 'Merry Christmas, my friend! May your stocking be full of surprises!', 'Ho ho ho! Merry Christmas! Jingle all the way!'] },
+  { keys: ['jingle bells', 'sing', 'song'],
+    say: ['Jingle bells, jingle bells, jingle all the way! Oh what fun it is to ride in a one horse open sleigh, hey!', 'La la la! Dashing through the snow, in a one horse open sleigh! Ho ho ho!', 'I only know one song, but I sing it very loudly! Jingle bells, jingle bells!'] },
+  { keys: ['joke', 'funny', 'make me laugh'],
+    say: ['What do you call a snowman in summer? A puddle! Ho ho ho!', 'Why did Santa go to music school? So he could improve his wrapping! Get it? Rapping!', 'What does Santa say when he is walking backwards? Oh oh oh!', 'Why does Santa have three gardens? So he can ho, ho, ho!', 'What do reindeer hang on their Christmas trees? Horn-aments!', 'What is a reindeer favourite snack? Mooselix! Hee hee hee!'] },
+  { keys: ['reindeer', 'rudolph'],
+    say: ['Rudolph has a very shiny nose. It is like having a torch on the front of the sleigh!', 'My reindeer are called Dasher, Dancer, Prancer, Vixen, Comet, Cupid, Donner, Blitzen and Rudolph. Phew!', 'The reindeer love carrots, but Rudolph secretly loves cookies too!'] },
+  { keys: ['elf', 'elves'],
+    say: ['My elves are the busiest toy makers in the whole world! One of them is called Jingles and he never stops giggling.', 'The elves are very good at wrapping presents, but terrible at hide and seek. They always giggle!'] },
+  { keys: ['present', 'gift', 'toy', 'what did you get'],
+    say: ['Presents! My favourite! Press the gift button and help me wrap some!', 'The elves have been making toys all year long. Shhh, it is a secret what is inside!', 'The best present is being kind to each other. But toys are good too! Ho ho ho!'] },
+  { keys: ['cookie', 'biscuit', 'hungry', 'food', 'eat'],
+    say: ['Did somebody say cookies? Press the cookie button and I will gobble one up!', 'Mmm, cookies! Chocolate chip are my favourite, but do not tell Mrs Claus!'] },
+  { keys: ['milk', 'drink', 'thirsty'],
+    say: ['A cold glass of milk with a cookie is the best! Press the milk button!', 'Glug glug glug! I love milk. It makes my beard extra white!'] },
+  { keys: ['north pole', 'where do you live', 'where are you from'],
+    say: ['I live at the North Pole, where it is snowy all year round and the lights shimmer in the sky!', 'The North Pole is very cold, but my workshop is warm and cosy, and it smells like gingerbread!'] },
+  { keys: ['mrs claus', 'wife', 'mrs santa'],
+    say: ['Mrs Claus bakes the best gingerbread in the world. She is the real boss around here, ho ho ho!'] },
+  { keys: ['name', 'who are you'],
+    say: ['I am Santa Claus, but my friends call me Santa! What is your name?', 'Ho ho ho! I am Santa! I live at the North Pole and I love Christmas!'] },
+  { keys: ['my name is', 'i am called', 'i\'m called'],
+    say: ['What a lovely name! It is on my nice list, I checked it twice!', 'Ho ho ho, nice to meet you! I will remember that name!'] },
+  { keys: ['love you', 'i like you', 'best santa'],
+    say: ['Aww, I love you too! You are on the very top of my nice list!', 'Ho ho ho! You just made my beard tingle with joy!'] },
+  { keys: ['nice list', 'naughty', 'good girl', 'good boy', 'been good'],
+    say: ['I checked my list, and you are on the nice list! Ho ho ho!', 'Being good is easy when you are kind. And I can tell you are very kind!'] },
+  { keys: ['fart', 'poo', 'burp', 'bum'],
+    say: ['Oh my jingle bells! Was that a reindeer? Hee hee hee!', 'Ho ho ho, excuse you! That was louder than my sleigh bells!'] },
+  { keys: ['snow', 'cold', 'winter'],
+    say: ['I love snow! It makes the best snowmen and the best snowball fights. Watch out, I have good aim!', 'Brrr! Good thing I have this big warm beard.'] },
+  { keys: ['sleigh', 'fly', 'flying'],
+    say: ['My sleigh flies faster than a rocket! Whoosh! Hold on to your hat!', 'On Christmas Eve we fly all around the world in one night. Ho ho ho, that is a lot of chimneys!'] },
+  { keys: ['thank you', 'thanks'],
+    say: ['You are very welcome! Ho ho ho!', 'My pleasure, my friend! Merry Christmas!'] },
+  { keys: ['bye', 'goodbye', 'see you', 'good night', 'goodnight'],
+    say: ['Goodbye, my friend! Merry Christmas! Ho ho ho!', 'Sleep tight! Santa will be watching for you on Christmas Eve!', 'See you soon! Do not forget to leave a cookie out for me!'] },
+  { keys: ['yes', 'yeah', 'yep'],
+    say: ['Ho ho ho, wonderful!', 'Excellent! I thought so!', 'Yippee! Jingle jingle!'] },
+  { keys: ['no', 'nope'],
+    say: ['Oh, that is okay! Santa understands.', 'Hmm, fair enough! Ho ho ho!'] }
+];
 
-// blink every few seconds
-function blink() {
-  eyes.style.transition = 'transform 0.08s';
-  eyes.style.transform = 'scaleY(0.08)';
-  setTimeout(() => { eyes.style.transform = 'scaleY(1)'; }, 110);
-  setTimeout(blink, 2200 + Math.random() * 2800);
-}
-setTimeout(blink, 2000);
+const fallbacks = [
+  'Ho ho ho! That is very interesting! Tell me more!',
+  'Ooh, I like that! Say something else, my friend!',
+  'Oh my jingle bells, I did not know that!',
+  'Hmm, let me think about that while I stroke my beard. Ho ho ho!',
+  'You are very clever! Do you want to hear a joke? Just ask me!',
+  'That makes me giggle! Hee hee hee!'
+];
 
-// mouth flap while talking, gentle breathing otherwise
-let t = 0;
-function loop() {
-  t += 0.05;
-  const breathe = Math.sin(t) * 3;
-  beard.style.transform = 'translateY(' + breathe * 0.4 + 'px)';
-  armL.style.transform = 'rotate(' + (Math.sin(t * 0.8) * 2) + 'deg)';
-  armR.style.transform = 'rotate(' + (-Math.sin(t * 0.8) * 2) + 'deg)';
-  if (talking) {
-    const open = 6 + Math.abs(Math.sin(t * 9)) * 24 + Math.random() * 4;
-    mouth.setAttribute('ry', open);
-    mouth.setAttribute('rx', 26 - open * 0.15);
-    tongue.setAttribute('opacity', open > 18 ? 0.9 : 0);
-    tongue.setAttribute('cy', 288 + open * 0.55);
-    beard.style.transform = 'translateY(' + (breathe * 0.4 + open * 0.18) + 'px)';
-    brows.style.transform = 'translateY(-4px)';
+function reply(text) {
+  const t = ' ' + text.toLowerCase().replace(/[^a-z' ]/g, ' ') + ' ';
+  const hits = brain.filter(b => b.keys.some(k => t.includes(' ' + k.trim() + ' ') || (k.length > 4 && t.includes(k))));
+  let out;
+  if (hits.length) {
+    // prefer the most specific (longest keyword) match
+    hits.sort((a, b) => Math.max(...b.keys.map(k => k.length)) - Math.max(...a.keys.map(k => k.length)));
+    out = pick(hits[0].say);
   } else {
-    mouth.setAttribute('ry', 6);
-    mouth.setAttribute('rx', 26);
-    tongue.setAttribute('opacity', 0);
-    brows.style.transform = 'translateY(0)';
+    out = pick(fallbacks);
   }
-  requestAnimationFrame(loop);
-}
-loop();
-
-// look toward a touch
-svg.addEventListener('touchmove', e => {
-  const r = svg.getBoundingClientRect();
-  const x = (e.touches[0].clientX - r.left) / r.width - 0.5;
-  const y = (e.touches[0].clientY - r.top) / r.height - 0.5;
-  pupils.style.transform = 'translate(' + (x * 10) + 'px,' + (y * 6) + 'px)';
-}, { passive: true });
-
-function bounce() {
-  svg.classList.add('bounce');
-  setTimeout(() => svg.classList.remove('bounce'), 160);
+  if (out === lastReply) out = pick(fallbacks);
+  lastReply = out;
+  return out;
 }
 
-// ---------- Voice: pick the most natural voice available ----------
+// ---------- Voice: best available voice, plus optional ElevenLabs ----------
+// To use a super realistic voice, put your Cloudflare Worker address below.
+// Leave it empty to use the phone's own voice.
+const VOICE_SERVER = '';
+
 let santaVoice = null;
 function pickVoice() {
   const voices = speechSynthesis.getVoices();
   if (!voices.length) return;
   const english = voices.filter(v => /^en/i.test(v.lang));
-  // prefer neural / enhanced / premium voices, then deep male-sounding names
-  const prefs = [/neural|natural|online/i, /premium|enhanced/i, /google uk english male/i, /daniel|arthur|oliver|fred|alex|aaron|reed|rocko|gordon|james|google us english/i];
+  const prefs = [/premium/i, /enhanced/i, /neural|natural|online/i, /evan|nathan|reed|rocko|aaron|gordon|daniel|arthur|oliver|alex|fred/i, /google uk english male/i];
   for (const p of prefs) {
     const found = english.find(v => p.test(v.name));
     if (found) { santaVoice = found; return; }
   }
   santaVoice = english[0] || voices[0];
 }
-if ('speechSynthesis' in window) {
-  pickVoice();
-  speechSynthesis.onvoiceschanged = pickVoice;
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+const speechBox = $('speech');
+const statusEl = $('status');
+let speaking = false;
+let currentAudio = null;
+
+function beginSpeaking(text) {
+  speaking = true; state.talking = true; state.mood = 1;
+  speechBox.textContent = text;
+  speechBox.style.display = 'block';
+  statusEl.textContent = 'Santa is talking...';
+  stopListening();
+}
+function endSpeaking() {
+  speaking = false; state.talking = false;
+  speechBox.style.display = 'none';
+  statusEl.textContent = wantListening ? 'Santa is listening... say something!' : 'Santa is resting. Tap the mic to wake him.';
+  setTimeout(startListening, 400);
 }
 
-// ---------- Speaking (mic pauses while Santa talks so he never hears himself) ----------
-const speech = document.getElementById('speech');
-const statusEl = document.getElementById('status');
-let speaking = false;
-function say(text, mode) {
-  // mode 'echo' = repeat what the child said in a cheery, slightly higher voice
-  // mode 'santa' = Santa's own lines, warm and slow
-  speech.textContent = text;
-  speech.style.display = 'block';
-  if (!('speechSynthesis' in window)) { setTimeout(() => speech.style.display = 'none', 2500); return; }
-  speechSynthesis.cancel();
+async function say(text) {
+  beginSpeaking(text);
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+  // realistic voice through the secure middle server
+  if (VOICE_SERVER) {
+    try {
+      const res = await fetch(VOICE_SERVER, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+      if (!res.ok) throw new Error('voice server');
+      const blob = await res.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
+      currentAudio = audio;
+      audio.onended = endSpeaking;
+      audio.onerror = endSpeaking;
+      await audio.play();
+      return;
+    } catch (err) { /* fall back to the phone voice below */ }
+  }
+
+  if (!('speechSynthesis' in window)) { setTimeout(endSpeaking, 2200); return; }
   const u = new SpeechSynthesisUtterance(text);
   if (santaVoice) u.voice = santaVoice;
-  if (mode === 'echo') { u.pitch = 1.25; u.rate = 1.0; }
-  else { u.pitch = 0.8; u.rate = 0.88; }
-  u.volume = 1;
-  u.onstart = () => { speaking = true; talking = true; statusEl.textContent = 'Santa is talking...'; stopListening(); };
-  u.onend = u.onerror = () => {
-    speaking = false; talking = false;
-    speech.style.display = 'none';
-    statusEl.textContent = 'Santa is listening... say something!';
-    setTimeout(startListening, 350);
-  };
+  u.pitch = 0.82; u.rate = 0.9; u.volume = 1;
+  u.onend = u.onerror = endSpeaking;
   speechSynthesis.speak(u);
-}
-function giggle() {
-  const lines = ['Ho ho ho!', 'Hee hee hee, that tickles!', 'Merry Christmas!', 'Ho ho ho, you are a funny one!', 'Oh my jingle bells!'];
-  say(lines[Math.floor(Math.random() * lines.length)], 'santa');
 }
 
 // ---------- Always-listening mic ----------
-const micBtn = document.getElementById('micBtn');
+const micBtn = $('micBtn');
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recog = null, wantListening = false, listening = false;
 if (Rec) {
@@ -307,25 +711,22 @@ if (Rec) {
   recog.lang = 'en-US';
   recog.continuous = false;
   recog.interimResults = false;
-  recog.onstart = () => { listening = true; micBtn.classList.add('on'); if (!speaking) statusEl.textContent = 'Santa is listening... say something!'; };
+  recog.onstart = () => { listening = true; if (!speaking) statusEl.textContent = 'Santa is listening... say something!'; };
   recog.onresult = e => {
     const text = e.results[e.results.length - 1][0].transcript.trim();
-    if (text) { happy = Math.min(10, happy); say(text, 'echo'); }
+    if (text) say(reply(text));
   };
   recog.onerror = e => {
     listening = false;
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       wantListening = false; micBtn.classList.remove('on');
-      statusEl.textContent = 'Please allow the microphone and tap the mic.';
+      statusEl.textContent = 'Please allow the microphone, then tap the mic.';
     }
   };
-  recog.onend = () => {
-    listening = false;
-    if (wantListening && !speaking) setTimeout(startListening, 250);
-  };
+  recog.onend = () => { listening = false; if (wantListening && !speaking) setTimeout(startListening, 250); };
 }
 function startListening() {
-  if (!recog || !wantListening || listening || speaking) return;
+  if (!recog || !wantListening || listening || speaking || running) return;
   try { recog.start(); } catch (err) {}
 }
 function stopListening() {
@@ -333,19 +734,16 @@ function stopListening() {
   try { recog.abort(); } catch (err) {}
   listening = false;
 }
-// mic button now just mutes or unmutes
 micBtn.addEventListener('click', () => {
-  if (!recog) { say('My ears do not work in this browser. Try Chrome!', 'santa'); return; }
+  if (!recog) { say('My ears do not work in this browser. Try Safari or Chrome!'); return; }
   wantListening = !wantListening;
   if (wantListening) { micBtn.classList.add('on'); startListening(); }
   else { micBtn.classList.remove('on'); stopListening(); statusEl.textContent = 'Santa is resting. Tap the mic to wake him.'; }
 });
 
-// ---------- Start screen (phones need a tap before sound and mic) ----------
-// ---------- Christmas music (made in code, no files needed) ----------
+// ---------- Christmas music, made in code ----------
 let audioCtx = null, musicOn = true, musicTimer = null, noteIndex = 0;
 const N = { C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88, C5:523.25, D5:587.33, E5:659.25, G5:783.99 };
-// Jingle Bells chorus: [note, beats]
 const tune = [
   ['E4',1],['E4',1],['E4',2],['E4',1],['E4',1],['E4',2],
   ['E4',1],['G4',1],['C4',1.5],['D4',0.5],['E4',4],
@@ -354,26 +752,22 @@ const tune = [
 ];
 function playNote(freq, dur) {
   const t0 = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sine'; osc.frequency.value = freq;
-  osc2.type = 'triangle'; osc2.frequency.value = freq * 2;
-  gain.gain.setValueAtTime(0, t0);
-  gain.gain.linearRampToValueAtTime(0.035, t0 + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  osc.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
-  osc.start(t0); osc2.start(t0);
-  osc.stop(t0 + dur + 0.05); osc2.stop(t0 + dur + 0.05);
+  const o1 = audioCtx.createOscillator(), o2 = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o1.type = 'sine'; o1.frequency.value = freq;
+  o2.type = 'triangle'; o2.frequency.value = freq * 2;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.035, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+  o1.start(t0); o2.start(t0); o1.stop(t0 + dur + 0.05); o2.stop(t0 + dur + 0.05);
 }
 function musicStep() {
   if (!musicOn) return;
   const [name, beats] = tune[noteIndex];
   const beatSec = 0.42;
-  // stay quiet while Santa is talking so the child can hear him
-  if (!speaking) playNote(N[name], beats * beatSec * 1.1);
+  if (!speaking && !running) playNote(N[name], beats * beatSec * 1.1);
   noteIndex = (noteIndex + 1) % tune.length;
-  const pause = noteIndex === 0 ? 4000 : 0; // short gap between rounds
+  const pause = noteIndex === 0 ? 4000 : 0;
   musicTimer = setTimeout(musicStep, beats * beatSec * 1000 + pause);
 }
 function startMusic() {
@@ -382,47 +776,169 @@ function startMusic() {
   clearTimeout(musicTimer);
   musicStep();
 }
-document.getElementById('musicBtn').addEventListener('click', () => {
-  const b = document.getElementById('musicBtn');
+function crunch() {
+  if (!audioCtx) return;
+  const len = audioCtx.sampleRate * 0.12;
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const g = audioCtx.createGain(); g.gain.value = 0.35;
+  src.connect(g); g.connect(audioCtx.destination); src.start();
+}
+function gulp() {
+  if (!audioCtx) return;
+  const t0 = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(320, t0); o.frequency.exponentialRampToValueAtTime(110, t0 + 0.18);
+  g.gain.setValueAtTime(0.2, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.2);
+  o.connect(g); g.connect(audioCtx.destination); o.start(t0); o.stop(t0 + 0.22);
+}
+$('musicBtn').addEventListener('click', () => {
   musicOn = !musicOn;
-  if (musicOn) { b.classList.add('on'); startMusic(); }
-  else { b.classList.remove('on'); clearTimeout(musicTimer); }
+  $('musicBtn').classList.toggle('on', musicOn);
+  if (musicOn) startMusic(); else clearTimeout(musicTimer);
 });
 
-document.getElementById('startBtn').addEventListener('click', () => {
-  startMusic();
-  document.getElementById('start').style.display = 'none';
+// ---------- Start screen ----------
+$('startBtn').addEventListener('click', () => {
+  $('start').style.display = 'none';
   wantListening = true;
-  say('Ho ho ho! Hello, my friend! Talk to me and I will say it back!', 'santa');
+  startMusic();
+  say('Ho ho ho! Hello, my friend! Talk to me, and I will talk right back!');
 });
 
-// ---------- Tap and tickle ----------
-svg.addEventListener('click', () => { bounce(); giggle(); });
-let lastTickle = 0;
-svg.addEventListener('touchmove', () => {
+// ---------- Tap and tickle Santa ----------
+const tapLines = ['Ho ho ho!', 'Hee hee hee, that tickles!', 'Oh my jingle bells!', 'Ho ho, again, again!', 'Merry Christmas!', 'Hahaha, stop it, you cheeky one!'];
+let pointerDown = false, lastTickle = 0;
+canvas.addEventListener('pointerdown', e => {
+  pointerDown = true;
+  if (hitSanta(e.clientX, e.clientY) && !speaking && !state.action) { state.mood = 1; say(pick(tapLines)); }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!pointerDown) return;
   const now = Date.now();
-  if (now - lastTickle > 1500 && !speaking) { lastTickle = now; bounce(); say('Hahaha! Stop it, that tickles!', 'santa'); }
-}, { passive: true });
-
-// ---------- Cookies ----------
-document.getElementById('cookieBtn').addEventListener('click', () => {
-  happy = Math.min(10, happy + 1);
-  refresh(); bounce();
-  say('Mmm, yum yum! Thank you for the cookie!', 'santa');
+  if (now - lastTickle > 1800 && hitSanta(e.clientX, e.clientY) && !speaking && !state.action) {
+    lastTickle = now; state.mood = 1; say('Hahaha! Stop it, that tickles!');
+  }
 });
+canvas.addEventListener('pointerup', () => { pointerDown = false; });
+canvas.addEventListener('pointercancel', () => { pointerDown = false; });
+
+// ---------- Cookie and milk: Santa reaches, grabs, and eats or drinks ----------
+const tableCookiePos = new THREE.Vector3(-1.9, 1.03, 0.9);
+const tableGlassPos = new THREE.Vector3(-1.55, 1.25, 0.9);
+const ease = x => x * x * (3 - 2 * x);
+
+function startAction(kind) {
+  if (state.action || speaking) return;
+  if (kind === 'cookie' && state.cookieBites >= 4) { state.cookieBites = 0; cookie.visible = true; cookie.scale.setScalar(1); }
+  if (kind === 'milk' && state.milkLevel <= 0.05) { state.milkLevel = 1; milk.scale.y = 1; milk.position.y = -0.04; }
+  state.action = kind; state.actionT = 0; state.eating = 0;
+  stopListening();
+  statusEl.textContent = kind === 'cookie' ? 'Santa is eating a cookie...' : 'Santa is drinking milk...';
+}
+
+function finishAction() {
+  const kind = state.action;
+  state.action = null; state.eating = 0;
+  happy = Math.min(10, happy + 1); refresh();
+  cookie.position.copy(tableCookiePos);
+  glass.position.copy(tableGlassPos);
+  glass.rotation.set(0, 0, 0);
+  say(kind === 'cookie'
+    ? pick(['Mmm, yum yum yum! Thank you for the cookie!', 'Crunch crunch! That is the best cookie ever!', 'Delicious! Chocolate chip, my favourite!'])
+    : pick(['Ahh, that was a lovely cold glass of milk!', 'Glug glug glug! Thank you, my friend!', 'Ooh, now I have a milk moustache! Ho ho ho!']));
+}
+
+onFrame((dt, t) => {
+  if (!state.action) return;
+  state.actionT += dt;
+  const dur = state.action === 'cookie' ? 5.2 : 5.6;
+  const p = Math.min(state.actionT / dur, 1);
+  state.eating = p;
+
+  const isCookie = state.action === 'cookie';
+  const arm = armL;           // Santa's left arm (on screen left) reaches the table
+  const item = isCookie ? cookie : glass;
+  const itemStart = isCookie ? tableCookiePos : tableGlassPos;
+
+  // where the hand is in the world
+  const hand = arm.userData.hand || arm.children[arm.children.length - 1];
+  const shoulder = new THREE.Vector3(-0.92, 1.72, 0.05).add(santa.position);
+  const mouthWorld = new THREE.Vector3();
+  mouth.getWorldPosition(mouthWorld);
+  const handHold = mouthWorld.clone().add(new THREE.Vector3(0.05, -0.12, 0.35));
+
+  // phase 1: reach the table 0..0.28, phase 2: carry to mouth 0.28..0.5, phase 3: eat 0.5..0.85, phase 4: put back 0.85..1
+  let target = new THREE.Vector3();
+  if (p < 0.28) {
+    target.lerpVectors(shoulder.clone().add(new THREE.Vector3(-0.2, -0.9, 0.2)), itemStart.clone().add(new THREE.Vector3(0, 0.05, 0.05)), ease(p / 0.28));
+  } else if (p < 0.5) {
+    target.lerpVectors(itemStart.clone().add(new THREE.Vector3(0, 0.05, 0.05)), handHold, ease((p - 0.28) / 0.22));
+  } else if (p < 0.85) {
+    target.copy(handHold);
+    // little bobbing while chewing or sipping
+    target.y += Math.sin(p * 60) * 0.025;
+  } else {
+    target.lerpVectors(handHold, shoulder.clone().add(new THREE.Vector3(-0.35, -0.9, 0.25)), ease((p - 0.85) / 0.15));
+  }
+
+  // point the arm at the target
+  const dx = target.x - shoulder.x, dy = target.y - shoulder.y, dz = target.z - shoulder.z;
+  arm.rotation.z = Math.atan2(-dx, -dy) * 1.0;
+  arm.rotation.x = Math.atan2(dz, -dy) * 0.9;
+
+  // item follows the hand while carried
+  if (p >= 0.1 && p < 0.88) {
+    item.position.copy(target);
+    if (!isCookie) {
+      item.position.y += 0.1;
+      // tilt the glass while drinking
+      const tilt = (p > 0.5 && p < 0.8) ? 0.9 * Math.sin((p - 0.5) / 0.3 * Math.PI) : 0;
+      item.rotation.z = tilt;
+    }
+  } else if (p >= 0.88) {
+    item.position.lerp(itemStart, 0.2);
+    item.rotation.z *= 0.8;
+  }
+
+  // bites and sips
+  if (isCookie && p > 0.52 && p < 0.84) {
+    const bite = Math.floor((p - 0.52) / 0.32 * 4);
+    if (bite + 1 > state.cookieBites) {
+      state.cookieBites = bite + 1;
+      cookie.scale.setScalar(Math.max(0.01, 1 - state.cookieBites * 0.25));
+      if (state.cookieBites >= 4) cookie.visible = false;
+      crunch();
+      state.mood = 0.5;
+    }
+  }
+  if (!isCookie && p > 0.5 && p < 0.8) {
+    const sip = 1 - ((p - 0.5) / 0.3) * 0.75;
+    state.milkLevel = Math.min(state.milkLevel, sip);
+    milk.scale.y = Math.max(0.05, state.milkLevel);
+    milk.position.y = -0.19 + 0.15 * milk.scale.y;
+    if (Math.floor(p * 40) % 6 === 0) gulp();
+  }
+
+  // the cookie reappears fresh when it was finished
+  if (p >= 1) {
+    if (isCookie && state.cookieBites >= 4) { cookie.visible = true; cookie.scale.setScalar(1); state.cookieBites = 0; }
+    finishAction();
+  }
+});
+
+$('cookieBtn').addEventListener('click', () => startAction('cookie'));
+$('milkBtn').addEventListener('click', () => startAction('milk'));
 
 // ---------- Hat shop ----------
 const hats = [
-  { icon: '', name: 'None', cost: 0 },
-  { icon: '👑', name: 'Crown', cost: 10 },
-  { icon: '🎩', name: 'Top hat', cost: 15 },
-  { icon: '🎓', name: 'Graduate', cost: 20 },
-  { icon: '🕶️', name: 'Shades', cost: 25 },
-  { icon: '🦌', name: 'Antlers', cost: 30 }
+  { icon: '', cost: 0 }, { icon: '👑', cost: 10 }, { icon: '🎩', cost: 15 },
+  { icon: '🎓', cost: 20 }, { icon: '🕶️', cost: 25 }, { icon: '🦌', cost: 30 }
 ];
-const shop = document.getElementById('shop');
 function drawShop() {
-  const list = document.getElementById('hatList');
+  const list = $('hatList');
   list.innerHTML = '';
   hats.forEach(h => {
     const b = document.createElement('button');
@@ -431,55 +947,51 @@ function drawShop() {
     b.innerHTML = (h.icon || '🚫') + '<small>' + (owned ? 'Wear' : '🪙 ' + h.cost) + '</small>';
     b.onclick = () => {
       if (owned) { save.hat = h.icon; }
-      else if (save.coins >= h.cost) { save.coins -= h.cost; save.owned.push(h.icon); save.hat = h.icon; say('Ooh, I love it!', 'santa'); }
-      else { say('You need more coins! Wrap some gifts!', 'santa'); }
+      else if (save.coins >= h.cost) { save.coins -= h.cost; save.owned.push(h.icon); save.hat = h.icon; say('Ooh, I love it!'); }
+      else { say('You need more coins! Help me wrap some gifts!'); }
       store(); refresh(); drawShop();
     };
     list.appendChild(b);
   });
 }
-document.getElementById('shopBtn').onclick = () => { drawShop(); shop.style.display = 'flex'; };
-document.getElementById('closeShop').onclick = () => shop.style.display = 'none';
+$('shopBtn').onclick = () => { drawShop(); $('shop').style.display = 'flex'; };
+$('closeShop').onclick = () => { $('shop').style.display = 'none'; };
 
 // ---------- Gift game ----------
-const game = document.getElementById('game');
+const game = $('game');
 let score = 0, timeLeft = 30, spawner, ticker, running = false;
 const giftIcons = ['🎁', '🎀', '🧸', '⭐'];
 function spawnGift() {
   const g = document.createElement('div');
   g.className = 'gift';
-  g.textContent = giftIcons[Math.floor(Math.random() * giftIcons.length)];
+  g.textContent = pick(giftIcons);
   g.style.left = Math.random() * (window.innerWidth - 80) + 'px';
   g.style.top = '60px';
   game.appendChild(g);
   let y = 60;
   const speed = 2 + Math.random() * 2.5;
   const fall = setInterval(() => {
-    y += speed;
-    g.style.top = y + 'px';
+    y += speed; g.style.top = y + 'px';
     if (y > window.innerHeight) { clearInterval(fall); g.remove(); }
   }, 16);
-  const pop = () => {
+  const popIt = () => {
     if (!running) return;
-    score++;
-    document.getElementById('score').textContent = score;
-    g.textContent = '✨';
-    clearInterval(fall);
+    score++; $('score').textContent = score;
+    g.textContent = '✨'; clearInterval(fall);
     setTimeout(() => g.remove(), 200);
   };
-  g.addEventListener('touchstart', e => { e.preventDefault(); pop(); });
-  g.addEventListener('mousedown', pop);
+  g.addEventListener('touchstart', e => { e.preventDefault(); popIt(); });
+  g.addEventListener('mousedown', popIt);
 }
 function startGame() {
+  if (speaking || state.action) return;
   stopListening();
   score = 0; timeLeft = 30; running = true;
-  document.getElementById('score').textContent = 0;
-  document.getElementById('timer').textContent = 30;
+  $('score').textContent = 0; $('timer').textContent = 30;
   game.style.display = 'block';
   spawner = setInterval(spawnGift, 600);
   ticker = setInterval(() => {
-    timeLeft--;
-    document.getElementById('timer').textContent = timeLeft;
+    timeLeft--; $('timer').textContent = timeLeft;
     if (timeLeft <= 0) endGame(true);
   }, 1000);
 }
@@ -490,13 +1002,13 @@ function endGame(finished) {
   game.style.display = 'none';
   if (finished) {
     save.coins += score; store(); refresh();
-    say('You wrapped ' + score + ' presents! Ho ho ho!', 'santa');
+    say('You wrapped ' + score + ' presents! Ho ho ho, what a helper!');
   } else {
     setTimeout(startListening, 300);
   }
 }
-document.getElementById('giftBtn').onclick = startGame;
-document.getElementById('closeGame').onclick = () => endGame(false);
+$('giftBtn').onclick = startGame;
+$('closeGame').onclick = () => endGame(false);
 </script>
 </body>
 </html>
